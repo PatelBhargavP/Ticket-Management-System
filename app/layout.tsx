@@ -1,21 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { ModeToggle } from "@/components/mode-toggle";
+import { ThemeProviderWrapper } from "@/components/theme-provider-wrapper";
 import React from "react";
-import { useTheme } from "next-themes";
 import { Navbar } from "@/components/navbar";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { ModeToggle } from "@/components/mode-toggle";
 
 export const metadata: Metadata = {
   title: "Ticket management system",
@@ -27,19 +15,22 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  
+
   return (
-    <html lang="en">
+    <html suppressHydrationWarning>
       <body>
         <Navbar />
-        <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
+        <ThemeProviderWrapper
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <div className="fixed bottom-4 right-4 z-50">
+            <ModeToggle></ModeToggle>
+          </div>
+        </ThemeProviderWrapper>
       </body>
     </html>
   );

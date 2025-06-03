@@ -4,7 +4,11 @@ import { NextResponse } from "next/server";
 // More on how NextAuth.js middleware works: https://next-auth.js.org/configuration/nextjs#middleware
 
 export default withAuth(
-    function middleware(req) {
+    function middleware(request) {
+        // Add a new header x-current-path which passes the path to downstream components
+        const headers = new Headers(request.headers);
+        headers.set("x-current-path", request.nextUrl.pathname);
+        return NextResponse.next({ headers });
         // if (  ) {
         // if (req.nextauth?.token && req.nextUrl.pathname.startsWith('/login')) {
         //     console.log('authorized login access', req.url)
@@ -21,14 +25,15 @@ export default withAuth(
         callbacks: {
             authorized({ req, token }) {
                 // `/admin` requires admin role
-                console.log('authorized', req, token)
-                if (req.nextUrl.pathname === "/admin") {
-                    return token?.userRole === "admin"
+                // console.log('authorized: ', req, token)
+                if (req.nextUrl.pathname === "/login") {
+                    return true
                 }
                 // `/me` only requires the user to be logged in
-                return !!token ;
+                // return true;
+                return !!token;
             },
         },
     })
 
-export const config = { matcher: ["/", "/projects"] }
+export const config = { matcher: ["/", "/projects", "/login", "/api/projects"] }

@@ -2,10 +2,11 @@ import "next-auth";
 import "next-auth/jwt";
 import NextAuth, { AuthOptions, DefaultSession } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import Credentials from 'next-auth/providers/credentials';
 import { Provider } from 'next-auth/providers';
-import { AppUser, IAppUser } from './models/User';
+import { IAppUser } from './models/User';
 import { getUserDetails } from "./app/actions/getUserDetails";
+import { createUser } from "./app/actions/createUser";
+import { upsertUser } from "./app/actions/updateUser";
 
 
 const providers: Provider[] = [
@@ -73,7 +74,9 @@ export const authOptions: AuthOptions = {
 
       let userDetails = await getUserDetails({email: user.email });
       if (!userDetails) {
-        // userDetails = await createUser(user);
+        userDetails = await createUser(user);
+      } else if(user?.image && userDetails.image !== user.image) {
+        await upsertUser({userId: userDetails.userId, image: user?.image})
       }
       if (userDetails) {
         user.id = userDetails?.userId;

@@ -4,24 +4,23 @@ import SignOut from './sign-out';
 import { Separator } from "@/components/ui/separator"
 import { Button } from './ui/button';
 import { headers } from 'next/headers';
+import { ProfileDropdown } from './profile-dropdown';
+import { authOptions } from '@/auth';
 
 export async function Navbar() {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     const headerList = await headers();
     const pathname = headerList.get("x-current-path");
     const isLoginPage = pathname?.includes("/login")
-    let buttons = <Button><Link href="/login">Login</Link></Button>;
+    let buttons = <></>;
     if (session) {
-        buttons = <><SignOut></SignOut></>
-    }
-    if (!session && isLoginPage) {
-        buttons = <a></a>;
+        buttons = <><ProfileDropdown name={session.user.name || undefined} email={session.user.email} avatarUrl={session.user.image}></ProfileDropdown></>
     }
     return (
         <>
-            <div className="p-4 flex justify-between">
+            <div className="p-2 flex justify-between items-center">
                 <div>
-                    <h3 className='text-xl'>{session?.user?.name ? `Welcome ${session?.user?.name} to Ticket management system` : "Ticket management system"}</h3>
+                    <h3 className='text-xl'>Ticket management system</h3>
                 </div>
                 <div className='inline-flex content-center'>
                     {buttons}

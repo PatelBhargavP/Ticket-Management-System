@@ -1,5 +1,5 @@
 import mongoose, { CallbackError, Model, ObjectId, Schema, Types } from "mongoose";
-import { AppUser, IAppUserDocument } from "./User";
+import { AppUser, IAppUser, IAppUserDocument } from "./User";
 import { AppTimeStamp } from "./time-stamp";
 
 export interface IProjectBase {
@@ -8,15 +8,9 @@ export interface IProjectBase {
     identifier?: string;
 }
 
-export interface IProjectMember {
-    userId: string;
-    fullname: string;
-    firstname: string;
-    lastname?: string;
-}
 
 export interface IProjectDetails extends IProjectBase, AppTimeStamp {
-    members: IProjectMember[];
+    members: IAppUser[];
 }
 
 export interface IProject extends IProjectBase, AppTimeStamp {

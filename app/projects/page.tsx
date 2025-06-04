@@ -5,7 +5,7 @@ import React, { Suspense } from 'react'
 export default function Projects() {
   const FallbackTemplate = (
     <>
-      <AddProjectButton />
+      <div className='flex justify-end'><AddProjectButton /></div>
       <p className="text-center"> Loading projects...! </p>
     </>
   )

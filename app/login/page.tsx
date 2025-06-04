@@ -1,6 +1,5 @@
 import React from 'react'
 import SigniWithGoogle from '@components/sign-in-with-google'
-import { ModeToggle } from '@/components/mode-toggle'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
@@ -21,7 +20,7 @@ export default function Login(props: {
         </label>
         <input type="submit" value="Sign In" />
       </form> */}
-      <SigniWithGoogle></SigniWithGoogle>
+      <SigniWithGoogle callbackUrl={props.searchParams.callbackUrl ? props.searchParams.callbackUrl : '/'}></SigniWithGoogle>
       <Button>
         <Link href="/">Back to home</Link>
       </Button>

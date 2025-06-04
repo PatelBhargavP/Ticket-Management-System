@@ -2,23 +2,41 @@
 
 import { IProjectDetails } from "@/models/Project";
 import { Button } from "./ui/button";
-import { use, useState } from "react";
+import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import ProjectEdit from "./project-edit";
 import { IAppUser } from "@/models/User";
 import AddProjectButton from "./add-project-button";
-import { FilePenLine } from "lucide-react";
+import { CircleX, FilePenLine } from "lucide-react";
+import { Input } from "./ui/input";
+import { useRouter } from "next/navigation";
 
 
 export default function ProjectList(
     { projects, users }: { projects: IProjectDetails[]; users: IAppUser[] }) {
     const [openSheet, setOpenSheet] = useState(false);
+    const [filterValue, setFilterValue] = useState('');
     const [selectedItem, setSelectedItem] = useState<IProjectDetails | null>(null);
-    // const router = useRouter();
+    const [filteredList, setFilteredList] = useState(projects);
+    const router = useRouter();
+
+    useEffect(() => {
+        handleFilter(filterValue); // Reset filter when props change
+    }, [projects]);
+
+    const handleFilter = (filterValue: string) => {
+        if (!filterValue) {
+            return setFilteredList(projects);
+        }
+        const filtered = projects.filter((item) =>
+            item.name.toLowerCase().includes(filterValue.toLowerCase())
+        );
+        setFilteredList(filtered);
+    };
 
     const handleRowClick = (item: IProjectDetails) => {
-        // router.push(`/project/${item.identifier}`);
+        router.push(`/projects/${item.identifier}/list`);
     };
 
     const handleEditClick = (
@@ -42,7 +60,19 @@ export default function ProjectList(
 
     return (
         <>
-            <div className="flex justify-between">
+            <div className="flex justify-between align-middle">
+                <div className="inline-flex w-fit">
+                    <Input
+                        value={filterValue}
+                        onChange={(e) => { setFilterValue(e.target.value); handleFilter(e.target.value); }}
+                        placeholder="Filter projects by name"
+                    />
+                    {
+                        filterValue && <Button className="ml-0.5" onClick={() => { setFilterValue(''); handleFilter(''); } } variant="ghost">
+                            <CircleX />
+                        </Button>
+                    }
+                </div>
                 <AddProjectButton />
             </div>
             <Table>
@@ -58,7 +88,7 @@ export default function ProjectList(
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {projects.map((item) => (
+                    {filteredList.map((item) => (
                         <TableRow
                             key={item.projectId}
                             onClick={() => handleRowClick(item)}

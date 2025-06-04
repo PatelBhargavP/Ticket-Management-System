@@ -3,7 +3,6 @@ import "./globals.css";
 import { ThemeProviderWrapper } from "@/components/theme-provider-wrapper";
 import React from "react";
 import { Navbar } from "@/components/navbar";
-import { ModeToggle } from "@/components/mode-toggle";
 
 export const metadata: Metadata = {
   title: "Ticket management system",
@@ -19,16 +18,15 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning>
       <body>
-        <Navbar />
         <ThemeProviderWrapper
           attribute="class"
           defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <div className="fixed bottom-4 right-4 z-50">
-            <ModeToggle></ModeToggle>
+        <Navbar />
+          <div className="px-2">
+            {children}
           </div>
         </ThemeProviderWrapper>
       </body>

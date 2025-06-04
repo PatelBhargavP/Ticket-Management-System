@@ -1,4 +1,4 @@
-import { IProjectDetails, IProjectDocument, IProjectMember } from "@/models/Project";
+import { IProjectDetails, IProjectDocument } from "@/models/Project";
 import { IAppUser, IAppUserDocument } from "@/models/User";
 import { clsx, type ClassValue } from "clsx"
 import { Query, QueryWithHelpers } from "mongoose";
@@ -33,12 +33,12 @@ export function castProjectDocumentToDetails(project: IProjectDocument) {
     identifier: project.identifier,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
-    members: project.memberIds as IProjectMember[]
+    members: project.memberIds as IAppUser[]
   } as IProjectDetails;
   return projectDetails;
 }
 
-export const projectMembersAttribute = ["fullname", "firstname", "lastname", "userId", "-_id"];
+export const projectMembersAttribute = ["fullname", "firstname", "lastname", "userId", "image", "email", "-_id"];
 
 export function castUserDocumentToDetails(user: IAppUserDocument) {
     const userDetails: IAppUser = {

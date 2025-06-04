@@ -10,6 +10,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "./ui/input";
 import { updateProject } from "@/app/actions/updateProject";
 import { useRouter } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import UserAvatar from "./user-avatar";
 
 export default function ProjectEdit({ project, users }: { project: IProjectDetails, users: IAppUser[] }) {
     const router = useRouter();
@@ -46,7 +48,7 @@ export default function ProjectEdit({ project, users }: { project: IProjectDetai
                     )}
                     onBlur={editName}
                     onKeyDown={async (e: React.KeyboardEvent) => {
-                        if(e.code == 'Enter') {
+                        if (e.code == 'Enter') {
                             await editName();
                         }
                     }}
@@ -72,7 +74,7 @@ export default function ProjectEdit({ project, users }: { project: IProjectDetai
                                 {availbleUsers.map((user) => {
                                     return (
                                         <DropdownMenuItem key={user.userId} onClick={() => addMember(user.userId)}>
-                                            {user.fullname}
+                                            <UserAvatar user={user} />
                                         </DropdownMenuItem>
                                     )
                                 })}
@@ -95,7 +97,9 @@ export default function ProjectEdit({ project, users }: { project: IProjectDetai
                                 key={item.userId}
                                 className="cursor-pointer hover:bg-muted"
                             >
-                                <TableCell>{item.fullname}</TableCell>
+                                <TableCell>
+                                    <UserAvatar user={item} />
+                                </TableCell>
                                 <TableCell>
                                     <Button title="Remove user" variant="ghost" onClick={() => removeMember(item.userId)}>
                                         <Trash2 />

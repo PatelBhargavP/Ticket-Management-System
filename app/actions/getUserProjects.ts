@@ -1,10 +1,11 @@
 "use server";
 
 import { Project } from "@/models";
-import { IProjectDetails, IProjectDocument, IProjectMember } from "@/models/Project";
+import { IProjectDetails, IProjectDocument } from "@/models/Project";
 import { FilterQuery } from "mongoose";
 import dbConnect from "@/lib/db";
 import { projectMembersAttribute } from "@/lib/utils";
+import { IAppUser } from "@/models/User";
 
 export async function getUserProjects(userId: string) {
     try {
@@ -20,7 +21,7 @@ export async function getUserProjects(userId: string) {
             identifier: project.identifier,
             createdAt: project.createdAt,
             updatedAt: project.updatedAt,
-            members: project.memberIds as IProjectMember[]
+            members: project.memberIds as IAppUser[]
         } as IProjectDetails));
     }
     catch (error) {

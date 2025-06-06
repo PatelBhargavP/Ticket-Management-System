@@ -24,3 +24,10 @@ export interface PaginatedData<T> extends PaginationParams {
   totalRecords: number;
   totalPages: number;
 }
+
+export type GroupingType = 'status' | 'priority' | 'none';
+export interface GroupedData<T, E> {
+  data: T[];
+  groupEntity: E;
+  groupType: GroupingType;
+}

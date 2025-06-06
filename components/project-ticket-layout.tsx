@@ -8,21 +8,35 @@ import { useProjectTicket } from "@/app/context/ProjectTicketContext";
 import { useSharedApp } from "@/app/context/SharedAppContext";
 import Link from "next/link";
 import { prefetchStatusAndPriority } from "@/lib/prefetch-data";
-import { PaginatedData } from "@/models";
+import { GroupedData, PaginatedData } from "@/models";
 import { Button } from "./ui/button";
 import { IAppUser } from "@/models/User";
 import TicketList from "./ticket-list";
 import TableSkeleton from "./table-skeleton";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "./ui/breadcrumb";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
+import { IStatus } from "@/models/Status";
+import { IPriority } from "@/models/Priority";
+import TicketKanbanBoard from "./ticket-kanban-board";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
 
 export default function ProjectTicketLayout(
-    { ticketData, contentType }: { ticketData: Promise<PaginatedData<ITicketDetails>>; contentType: 'list' | 'board'; }
+    {
+        ticketData,
+        ticketBoardData,
+        contentType
+    }: {
+        ticketData?: Promise<PaginatedData<ITicketDetails>>;
+        ticketBoardData?: Promise<{ [key: string]: GroupedData<ITicketDetails, IStatus | IPriority> }>
+        contentType: 'list' | 'board';
+    }
 ) {
     const { ticket, setTicket, project, projectUsers } = useProjectTicket();
     prefetchStatusAndPriority();
     const { statuses, priorities } = useSharedApp();
     const [openSheet, setOpenSheet] = useState(false);
+    const [isFormDirty, setIsFormDirty] = useState(false);
+    const [showPrompt, setShowPrompt] = useState(false);
     const newTicketObj = {
         name: "",
         description: "",
@@ -46,8 +60,14 @@ export default function ProjectTicketLayout(
     }
 
     const openSheetHandler = (state: boolean) => {
+
         if (!state) {
-            setTicket(null);
+            // if (isFormDirty) {
+            //     setShowPrompt(true);
+            //     return;
+            // } else {
+                setTicket(null);
+            // }
         }
         setOpenSheet(state);
     }
@@ -89,7 +109,14 @@ export default function ProjectTicketLayout(
                 <Button onClick={onTicketAdd}>Add ticket</Button>
             </div>
             <Suspense fallback={<TableSkeleton rows={10} />}>
-                <TicketList ticketData={ticketData} onTicketEdit={onTicketEdit} />
+                {
+                    ticketData
+                        ? <TicketList ticketData={ticketData} onTicketEdit={onTicketEdit} />
+                        : ticketBoardData
+                            ? <TicketKanbanBoard groupedTicketsPromise={ticketBoardData} onTicketEdit={onTicketEdit} />
+                            : <p>Error</p>
+                }
+
             </Suspense>
             <Sheet open={openSheet} onOpenChange={openSheetHandler}>
                 <SheetContent>
@@ -97,9 +124,36 @@ export default function ProjectTicketLayout(
                         <SheetTitle>{ticket?.ticketId ? 'Edit' : 'Create'} Ticket</SheetTitle>
                     </SheetHeader>
 
-                    {ticket ? <TicketForm setOpenSheet={setOpenSheet} /> : ''}
+                    {ticket ? <TicketForm
+                        onDirtyChange={(dirty) => setIsFormDirty(dirty)} onSubmitSuccess={() => {
+                            setIsFormDirty(false);
+                            openSheetHandler(false);
+                        }} /> : ''}
                 </SheetContent>
             </Sheet>
+
+
+            <AlertDialog open={showPrompt} onOpenChange={setShowPrompt}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            You have unsaved changes. Are you sure you want to discard them?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setShowPrompt(false)}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={() => {
+                            setIsFormDirty(false);
+                            setOpenSheet(false);
+                        }}>
+                            Discard Changes
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     )
 } 

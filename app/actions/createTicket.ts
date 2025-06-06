@@ -32,7 +32,8 @@ export async function createTicket(projectId: string, ticket: Partial<ITicketDoc
             throw Error("Something went wron fetching newely created ticket")
         }
         const details = castTicketDocumentToDetails(newTicketPopulated);
-        revalidatePath(`/projects/${details.project.identifier}/list`)
+        revalidatePath(`/projects/${details.project.identifier}/list`);
+        revalidatePath(`/projects/${details.project.identifier}/board`);
         return details;
     } catch (error) {
         console.error('Error creating ticket:', error);

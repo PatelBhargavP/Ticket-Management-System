@@ -26,6 +26,7 @@ export async function updateTicket(ticketId: string, projectId: string, payload:
 
         const details = castTicketDocumentToDetails(updatedDocument as ITicketDocument);
         revalidatePath(`/projects/${details.project.identifier}/list`);
+        revalidatePath(`/projects/${details.project.identifier}/board`);
         return details;
     } catch (error) {
         console.error('Error updating ticket:', error);

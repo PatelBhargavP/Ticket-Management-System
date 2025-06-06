@@ -1,3 +1,4 @@
+import { getTicketsGrouped } from "@/app/actions/getGroupedTicketsForUser";
 import { getPaginatedProjectTickets } from "@/app/actions/getPaginatedProjectTickets";
 import ProjectTicketLayout from "@/components/project-ticket-layout";
 import TicketList from "@/components/ticket-list";
@@ -12,12 +13,12 @@ export default async function TicketBoardPage({params}: {params: Promise<{ ident
   )
   const projectIdentifier = (await params).identifier;
   const projectDetails = await projectByIdentifierCache(projectIdentifier)();
-  const projectTicketist = getPaginatedProjectTickets(projectDetails.projectId, {});
+  const projectTicketist = getTicketsGrouped('status', projectDetails.projectId);
 
   return (
     <>
       <Suspense fallback={FallbackTemplate}>
-        <ProjectTicketLayout ticketData={projectTicketist} contentType="board"></ProjectTicketLayout>
+        <ProjectTicketLayout ticketBoardData={projectTicketist} contentType="board"></ProjectTicketLayout>
       </Suspense>
     </>
   );

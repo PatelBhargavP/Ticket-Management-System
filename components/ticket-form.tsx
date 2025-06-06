@@ -32,7 +32,7 @@ const FormSchema = z.object({
     }),
     description: z.string().max(1000, {
         message: "Description cannot be longer than 1000 charecters.",
-    }),
+    }).optional(),
     ticketId: z.string(),
     projectId: z.string(),
     assigneeIds: z.array(z.string()),
@@ -40,12 +40,16 @@ const FormSchema = z.object({
     priorityId: z.string(),
 })
 
-export default function TicketForm({ setOpenSheet }: { setOpenSheet: (state: boolean) => void }) {
+type Props = {
+    onDirtyChange: (dirty: boolean) => void;
+    onSubmitSuccess: () => void;
+};
+
+export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
 
     const router = useRouter();
     const { ticket, projectUsers, setTicket } = useProjectTicket();
     const { statuses, priorities } = useSharedApp();
-    useEffect(() => setFormValue(ticket), [ticket]);
 
 
     const setFormValue = (ticket: ITicketDetails | null) => {
@@ -69,16 +73,19 @@ export default function TicketForm({ setOpenSheet }: { setOpenSheet: (state: boo
             priorityId: ticket?.priority.priorityId,
         },
     });
+    // useEffect(() => {
+    //     onDirtyChange(form.formState.isDirty);
+    // }, [form.formState.isDirty, onDirtyChange]);
 
     async function onSubmit(data: z.infer<typeof FormSchema>) {
-        console.log(data);
         if (!data.ticketId) {
             await createTicket(data.projectId, data);
         } else {
             await updateTicket(data.ticketId, data.projectId, data);
         }
-        setTicket(null);
-        setOpenSheet(false);
+        // setTicket(null);
+        onDirtyChange(false);
+        onSubmitSuccess();
         router.refresh();
     }
 
@@ -209,7 +216,7 @@ export default function TicketForm({ setOpenSheet }: { setOpenSheet: (state: boo
                                     <FormLabel>Status</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
-                                            { getStatusTrigger(field.value) }
+                                            {getStatusTrigger(field.value)}
                                         </FormControl>
                                         <SelectContent>
                                             {statuses.map((status) => {
@@ -241,7 +248,7 @@ export default function TicketForm({ setOpenSheet }: { setOpenSheet: (state: boo
                                     <FormLabel>Priority</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
-                                            { getPriorityTrigger(field.value) }
+                                            {getPriorityTrigger(field.value)}
                                         </FormControl>
                                         <SelectContent>
                                             {priorities.map((priority) => {

@@ -19,6 +19,10 @@ import { updateTicket } from "@/app/actions/updateTicket";
 import { useEffect } from "react";
 import { ITicketDetails } from "@/models/Ticket";
 import { useRouter } from "next/navigation";
+import { UserAvatarGroup } from "./user-avatar-group";
+import { IAppUser } from "@/models/User";
+import UserAvatar from "./user-avatar";
+import DynamicIcon from "./dynamic-icon";
 
 const FormSchema = z.object({
     name: z.string().min(1, {
@@ -36,10 +40,10 @@ const FormSchema = z.object({
     priorityId: z.string(),
 })
 
-export default function TicketForm() {
+export default function TicketForm({ setOpenSheet }: { setOpenSheet: (state: boolean) => void }) {
 
     const router = useRouter();
-    const { ticket, projectUsers } = useProjectTicket();
+    const { ticket, projectUsers, setTicket } = useProjectTicket();
     const { statuses, priorities } = useSharedApp();
     useEffect(() => setFormValue(ticket), [ticket]);
 
@@ -73,22 +77,45 @@ export default function TicketForm() {
         } else {
             await updateTicket(data.ticketId, data.projectId, data);
         }
+        setTicket(null);
+        setOpenSheet(false);
         router.refresh();
+    }
+
+    const getStatusTrigger = (statusId: string) => {
+        const status = statuses.find(s => s.statusId === statusId);
+        return (<SelectTrigger
+            style={{
+                color: status?.color || '',
+                backgroundColor: status?.color ? `${status?.color}20` : '', // add 20 for ~12% opacity
+            }}>
+            <SelectValue placeholder="Select a status" />
+        </SelectTrigger>);
+    }
+
+    const getPriorityTrigger = (priorityId: string) => {
+        const priority = priorities.find(p => p.priorityId === priorityId);
+        return (<SelectTrigger
+            style={{
+                color: priority?.color || '',
+                backgroundColor: priority?.color ? `${priority?.color}20` : '', // add 20 for ~12% opacity
+            }}>
+            <SelectValue placeholder="Select a priority" />
+        </SelectTrigger>);
     }
 
     return (
         <div className="px-3">
-            TicketForm, {ticket?.name}
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
                     <FormField
-                        control={form.control}
                         name="name"
+                        control={form.control}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Name</FormLabel>
+                                <FormLabel>Title</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="shadcn" {...field} />
+                                    <Input placeholder="Title of this ticket" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -96,49 +123,38 @@ export default function TicketForm() {
                     />
 
                     <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Description</FormLabel>
-                                <FormControl>
-                                    <Textarea
-                                        placeholder="Tell us a little bit about this ticket!"
-                                        className="resize-none"
-                                        {...field}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
                         name="assigneeIds"
+                        control={form.control}
                         render={({ field }) => (
                             <FormItem className="flex flex-col">
                                 <FormLabel>Assignee</FormLabel>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <FormControl>
-                                            <Button
-                                                variant="outline"
-                                                role="combobox"
-                                                className={cn(
-                                                    "w-[200px] justify-between",
-                                                    !field.value.length ? "text-muted-foreground" : "overflow-hidden text-ellipsis"
-                                                )}
-                                            >
-                                                {field.value.length
-                                                    ? field.value.reduce((previousVal, currentVal) => {
-                                                        const user = projectUsers.find(u => u.userId === currentVal);
-                                                        previousVal = `${previousVal}${previousVal ? ',' : ''} ${user?.fullname}`;
-                                                        return previousVal;
-                                                    }, '')
-                                                    : "Add Assignee"}
-                                                <ChevronsUpDown className="opacity-50" />
-                                            </Button>
+                                            {
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    className={cn(
+                                                        "flex text-muted-foreground border-0 size-12 items-center"
+                                                    )}
+                                                    style={{
+                                                        width: !field.value.length ? '130px' : `${Math.min((field.value.length * (field.value.length === 1 ? 36 : 30)), 4 * 30) + 24}px`,
+                                                    }}
+                                                >
+                                                    {
+                                                        field.value.length
+                                                            ? <UserAvatarGroup users={field.value.reduce((previousVal, currentVal) => {
+                                                                const user = projectUsers.find(u => u.userId === currentVal);
+                                                                if (user) {
+                                                                    previousVal.push(user);
+                                                                }
+                                                                return previousVal;
+                                                            }, [] as IAppUser[])} />
+                                                            : <span className="inline-flex items-center justify-between">Add Assignee <ChevronsUpDown className="opacity-50" /></span>}
+
+                                                </Button>
+                                            }
                                         </FormControl>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-[200px] p-0">
@@ -163,7 +179,7 @@ export default function TicketForm() {
                                                                 )
                                                             }}
                                                         >
-                                                            {user.fullname}
+                                                            <UserAvatar user={user} />
                                                             <Check
                                                                 className={cn(
                                                                     "ml-auto",
@@ -184,51 +200,90 @@ export default function TicketForm() {
                         )}
                     />
 
+                    <div className="w-full grid grid-cols-2 gap-2">
+                        <FormField
+                            name="statusId"
+                            control={form.control}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Status</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            { getStatusTrigger(field.value) }
+                                        </FormControl>
+                                        <SelectContent>
+                                            {statuses.map((status) => {
+                                                return (
+                                                    <SelectItem
+                                                        key={status.statusId}
+                                                        value={status.statusId}
+                                                        className="my-1"
+                                                        style={{
+                                                            color: status.color,
+                                                            backgroundColor: `${status.color}20`, // add 20 for ~12% opacity
+                                                        }} >
+                                                        <DynamicIcon iconName={status.icon} color={status.color} /> {status.name}
+                                                    </SelectItem>
+                                                );
+                                            })}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            name="priorityId"
+                            control={form.control}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Priority</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            { getPriorityTrigger(field.value) }
+                                        </FormControl>
+                                        <SelectContent>
+                                            {priorities.map((priority) => {
+                                                return (
+
+                                                    <SelectItem
+                                                        key={priority.priorityId}
+                                                        value={priority.priorityId}
+                                                        className="my-1"
+                                                        style={{
+                                                            color: priority.color,
+                                                            backgroundColor: `${priority.color}20`, // add 20 for ~12% opacity
+                                                        }} >
+                                                        <DynamicIcon iconName={priority.icon} color={priority.color} /> {priority.name}
+                                                    </SelectItem>);
+                                            })}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                     <FormField
+                        name="description"
                         control={form.control}
-                        name="statusId"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Status</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a status" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {statuses.map((status) => {
-                                            return <SelectItem key={status.statusId} value={status.statusId}>{status.name}</SelectItem>;
-                                        })}
-                                    </SelectContent>
-                                </Select>
+                                <FormLabel>Description</FormLabel>
+                                <FormControl>
+                                    <Textarea
+                                        placeholder="Tell us a little bit about this ticket!"
+                                        className="resize-none"
+                                        {...field}
+                                    />
+                                </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
 
-                    <FormField
-                        control={form.control}
-                        name="priorityId"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Priority</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a priority" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {priorities.map((priority) => {
-                                            return <SelectItem key={priority.priorityId} value={priority.priorityId}>{priority.name}</SelectItem>;
-                                        })}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+
                     <Button type="submit">Submit</Button>
                 </form>
             </Form>

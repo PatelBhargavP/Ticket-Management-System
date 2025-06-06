@@ -11,6 +11,7 @@ import AddProjectButton from "./add-project-button";
 import { CircleX, FilePenLine } from "lucide-react";
 import { Input } from "./ui/input";
 import { useRouter } from "next/navigation";
+import { UserAvatarGroup } from "./user-avatar-group";
 
 
 export default function ProjectList(
@@ -61,26 +62,41 @@ export default function ProjectList(
         }
     }
 
+    const header = <div className="flex justify-between align-middle">
+        <div className="inline-flex w-fit">
+            <Input
+                value={filterValue}
+                onChange={(e) => { setFilterValue(e.target.value); handleFilter(e.target.value); }}
+                placeholder="Filter projects by name"
+            />
+            {
+                filterValue && <Button className="ml-0.5" onClick={() => { setFilterValue(''); handleFilter(''); }} variant="ghost">
+                    <CircleX />
+                </Button>
+            }
+        </div>
+        <AddProjectButton />
+    </div>
+
+    if (!filteredList.length) {
+        return (
+            <>
+                {header}
+                <div className="flex items-center justify-center h-96">
+                    <div className='flex flex-col justify-around'>
+                        {filterValue ? "No matching results found!" : "No projects created yet!"}
+                    </div>
+                </div>
+            </>
+        )
+    }
+
     return (
         <>
-            <div className="flex justify-between align-middle">
-                <div className="inline-flex w-fit">
-                    <Input
-                        value={filterValue}
-                        onChange={(e) => { setFilterValue(e.target.value); handleFilter(e.target.value); }}
-                        placeholder="Filter projects by name"
-                    />
-                    {
-                        filterValue && <Button className="ml-0.5" onClick={() => { setFilterValue(''); handleFilter(''); }} variant="ghost">
-                            <CircleX />
-                        </Button>
-                    }
-                </div>
-                <AddProjectButton />
-            </div>
+            {header}
             <Table>
-                <TableHeader>
-                    <TableRow>
+                <TableHeader className="bg-muted text-muted-foreground uppercase text-xs font-extralight tracking-wide">
+                    <TableRow className="[&>th]:px-4 [&>th]:py-2 [&>th]:text-left">
                         <TableHead>Name</TableHead>
                         <TableHead>Identifier</TableHead>
                         <TableHead>Members</TableHead>
@@ -96,11 +112,13 @@ export default function ProjectList(
                         <TableRow
                             key={item.projectId}
                             onClick={() => handleRowClick(item)}
-                            className="cursor-pointer hover:bg-muted"
+                            className="cursor-pointer hover:bg-muted [&>td]:px-4"
                         >
                             <TableCell>{item.name}</TableCell>
                             <TableCell>{item.identifier}</TableCell>
-                            <TableCell>{item.members.length} member{item.members.length > 1 ? 's' : ''}</TableCell>
+                            <TableCell>
+                                <UserAvatarGroup users={item.members} />
+                            </TableCell>
                             <TableCell>
                                 <span className="w-full flex justify-end pr-2">
                                     <Button

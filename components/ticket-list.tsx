@@ -3,27 +3,35 @@
 import { use } from "react";
 import { ITicketDetails } from "@/models/Ticket";
 import { PaginatedData } from "@/models";
-import { Button } from "./ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-import { useProjectTicket } from "@/app/context/ProjectTicketContext";
+import { UserAvatarGroup } from "./user-avatar-group";
+import IconColorBadge from "./icon-color-badge";
 
 export default function TicketList(
-    { ticketData, onTicketEdit }:{ ticketData: Promise<PaginatedData<ITicketDetails>>, onTicketEdit: (ticket: ITicketDetails) => void}
+    { ticketData, onTicketEdit }: { ticketData: Promise<PaginatedData<ITicketDetails>>, onTicketEdit: (ticket: ITicketDetails) => void }
 ) {
     const ticketListData = use(ticketData);
 
     const handleRowClick = (ticket: ITicketDetails) => {
         onTicketEdit(ticket);
-    } 
+    }
+
+    if (!ticketListData.totalRecords) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className='flex flex-col justify-around'>
+                    No tickets created yet!
+                </div>
+            </div>
+        )
+    }
 
     return (
         <>
-        {/* <Button onClick={onTicketAdd}>Add ticket</Button> */}
-        total_tickets - {ticketListData.totalRecords}
-        <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
+            <Table>
+                <TableHeader className="bg-muted text-muted-foreground uppercase text-xs font-extralight tracking-wide">
+                    <TableRow className="[&>th]:px-4 [&>th]:py-2 [&>th]:text-left">
+                        <TableHead>Title</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Priority</TableHead>
                         <TableHead>Assignee</TableHead>
@@ -34,12 +42,18 @@ export default function TicketList(
                         <TableRow
                             key={item.ticketId}
                             onClick={() => handleRowClick(item)}
-                            className="cursor-pointer hover:bg-muted"
+                            className="cursor-pointer hover:bg-muted [&>td]:px-4"
                         >
                             <TableCell>{item.name}</TableCell>
-                            <TableCell>{item.status.name}</TableCell>
-                            <TableCell>{item.priority.name}</TableCell>
-                            <TableCell>{item.assignee.length} member{item.assignee.length > 1 ? 's' : ''}</TableCell>
+                            <TableCell>
+                                <IconColorBadge entity={item.status}/>
+                            </TableCell>
+                            <TableCell>
+                                <IconColorBadge entity={item.priority}/>
+                            </TableCell>
+                            <TableCell>
+                                <UserAvatarGroup users={item.assignee} />
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>

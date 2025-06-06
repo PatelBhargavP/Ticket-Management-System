@@ -11,7 +11,7 @@ export default function UserAvatar({
 }) {
     return (
         <span className={(className || '') + 'inline-flex justify-between items-center'}>
-            <Avatar className="mr-2">
+            <Avatar className="size-10 mr-2">
                 <AvatarImage src={user.image} alt={user.fullname} referrerPolicy={'no-referrer'} />
                 <AvatarFallback>{
                     (user.firstname && user.firstname[0]) + (user.lastname && user.lastname[0])

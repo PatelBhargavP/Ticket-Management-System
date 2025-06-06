@@ -13,6 +13,8 @@ import { Button } from "./ui/button";
 import { IAppUser } from "@/models/User";
 import TicketList from "./ticket-list";
 import TableSkeleton from "./table-skeleton";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "./ui/breadcrumb";
+import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 
 export default function ProjectTicketLayout(
     { ticketData, contentType }: { ticketData: Promise<PaginatedData<ITicketDetails>>; contentType: 'list' | 'board'; }
@@ -22,7 +24,7 @@ export default function ProjectTicketLayout(
     const { statuses, priorities } = useSharedApp();
     const [openSheet, setOpenSheet] = useState(false);
     const newTicketObj = {
-        name: "Create new ticket",
+        name: "",
         description: "",
         project,
         status: statuses.find(s => s.isDefault) || statuses[0],
@@ -52,18 +54,50 @@ export default function ProjectTicketLayout(
 
     return (
         <>
-            <Button onClick={onTicketAdd}>Add ticket</Button>
-            <Suspense fallback={<TableSkeleton rows={10}/>}>
+            <div className="pt-3">
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink asChild>
+                                <Link href="/projects">Projects</Link>
+                            </BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            {`${project.name} : ${project.identifier}`}
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>{contentType.toUpperCase()}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+            </div>
+            <div className="flex py-3 w-full justify-around items-center">
+                <Tabs defaultValue={contentType}>
+                    <TabsList>
+                        <TabsTrigger value="list">
+                            <Link href={`/projects/${project.identifier}/list`} >List</Link>
+                        </TabsTrigger>
+                        <TabsTrigger value="board">
+                            <Link href={`/projects/${project.identifier}/board`} >Board</Link>
+                        </TabsTrigger>
+                    </TabsList>
+                </Tabs>
+            </div>
+            <div className="flex pb-3 w-full justify-end">
+                <Button onClick={onTicketAdd}>Add ticket</Button>
+            </div>
+            <Suspense fallback={<TableSkeleton rows={10} />}>
                 <TicketList ticketData={ticketData} onTicketEdit={onTicketEdit} />
             </Suspense>
-            {/* {project.name} | total_ticket - {ticketList.totalRecords} | total Statuse: {statuses.length}, Priorities: {priorities.length} | selected ticket : {ticket?.name} |  */}
             <Sheet open={openSheet} onOpenChange={openSheetHandler}>
                 <SheetContent>
                     <SheetHeader>
                         <SheetTitle>{ticket?.ticketId ? 'Edit' : 'Create'} Ticket</SheetTitle>
                     </SheetHeader>
 
-                    {ticket ? <TicketForm /> : ''}
+                    {ticket ? <TicketForm setOpenSheet={setOpenSheet} /> : ''}
                 </SheetContent>
             </Sheet>
         </>

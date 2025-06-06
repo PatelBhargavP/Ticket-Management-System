@@ -8,18 +8,11 @@ export default withAuth(
         // Add a new header x-current-path which passes the path to downstream components
         const headers = new Headers(request.headers);
         headers.set("x-current-path", request.nextUrl.pathname);
+        if (request.nextauth?.token && request.nextUrl.pathname.startsWith('/login')) {
+            console.log('authorized login access', request.url)
+            return NextResponse.redirect(new URL('/projects', request.url));
+        }
         return NextResponse.next({ headers });
-        // if (  ) {
-        // if (req.nextauth?.token && req.nextUrl.pathname.startsWith('/login')) {
-        //     console.log('authorized login access', req.url)
-        //     return NextResponse.redirect('/');
-        // }
-        // }
-        // if ( req.nextUrl.pathname.startsWith('/premium') ) {
-        //     if (req.nextauth.token.userRole !== 'Premium') {
-        //     return NextResponse.redirect(new URL('/dashboard', req.url));
-        //     }
-        // }
     },
     {
         callbacks: {

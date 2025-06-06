@@ -2,8 +2,8 @@
 
 import dbConnect from "@/lib/db";
 import { IProjectDocument, Project } from "@/models/Project";
-import { revalidatePath } from "next/cache";
-import { castProjectDocumentToDetails, projectMembersAttribute } from "@/lib/utils";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { castProjectDocumentToDetails, appUserAttributes } from "@/lib/utils";
 
 export async function updateProject(projectId: string, data: Partial<IProjectDocument>) {
     try {
@@ -24,11 +24,12 @@ export async function updateProject(projectId: string, data: Partial<IProjectDoc
                 payload.memberIds = data.memberIds
             }
             await Project.updateOne({ _id: projectId }, { $set: payload });
-            const p = await Project.findOne({ _id: projectId }).populate('memberIds', projectMembersAttribute).lean() as IProjectDocument;
+            const p = await Project.findOne({ _id: projectId }).populate('memberIds', appUserAttributes).lean<IProjectDocument>();
             if(!p) {
                 return castProjectDocumentToDetails(project);
             }
             const updatedProject = castProjectDocumentToDetails(p);
+            revalidateTag(`projectIdentifier:${updatedProject.identifier}`);
             revalidatePath('/projects');
             return updatedProject;
         }

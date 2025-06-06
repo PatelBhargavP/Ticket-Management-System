@@ -2,7 +2,7 @@
 
 import { IProjectDetails } from "@/models/Project";
 import { Button } from "./ui/button";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import ProjectEdit from "./project-edit";
@@ -14,7 +14,10 @@ import { useRouter } from "next/navigation";
 
 
 export default function ProjectList(
-    { projects, users }: { projects: IProjectDetails[]; users: IAppUser[] }) {
+    { projectsPromise, usersPromise }: { projectsPromise: Promise<IProjectDetails[]>; usersPromise: Promise<IAppUser[]> }
+) {
+    const users = use(usersPromise);
+    const projects = use(projectsPromise);
     const [openSheet, setOpenSheet] = useState(false);
     const [filterValue, setFilterValue] = useState('');
     const [selectedItem, setSelectedItem] = useState<IProjectDetails | null>(null);
@@ -68,7 +71,7 @@ export default function ProjectList(
                         placeholder="Filter projects by name"
                     />
                     {
-                        filterValue && <Button className="ml-0.5" onClick={() => { setFilterValue(''); handleFilter(''); } } variant="ghost">
+                        filterValue && <Button className="ml-0.5" onClick={() => { setFilterValue(''); handleFilter(''); }} variant="ghost">
                             <CircleX />
                         </Button>
                     }
@@ -79,6 +82,7 @@ export default function ProjectList(
                 <TableHeader>
                     <TableRow>
                         <TableHead>Name</TableHead>
+                        <TableHead>Identifier</TableHead>
                         <TableHead>Members</TableHead>
                         <TableHead>
                             <span className="w-full flex justify-end pr-3">
@@ -95,6 +99,7 @@ export default function ProjectList(
                             className="cursor-pointer hover:bg-muted"
                         >
                             <TableCell>{item.name}</TableCell>
+                            <TableCell>{item.identifier}</TableCell>
                             <TableCell>{item.members.length} member{item.members.length > 1 ? 's' : ''}</TableCell>
                             <TableCell>
                                 <span className="w-full flex justify-end pr-2">

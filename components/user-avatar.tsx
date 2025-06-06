@@ -9,7 +9,6 @@ export default function UserAvatar({
     user: IAppUser;
     className?: string;
 }) {
-    console.log(user)
     return (
         <span className={(className || '') + 'inline-flex justify-between items-center'}>
             <Avatar className="mr-2">

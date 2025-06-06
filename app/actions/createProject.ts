@@ -2,7 +2,7 @@
 
 import { authOptions } from "@/auth";
 import dbConnect from "@/lib/db";
-import { castProjectDocumentToDetails, projectMembersAttribute } from "@/lib/utils";
+import { castProjectDocumentToDetails, appUserAttributes } from "@/lib/utils";
 import { IProjectDocument, Project } from "@/models/Project";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
@@ -18,7 +18,7 @@ export async function createProject(data: Partial<IProjectDocument>) {
                 data['memberIds'] = [session.userId];
             }
             const project = await Project.create(data);
-            const p = await Project.findOne({ _id: project.id }).populate('memberIds', projectMembersAttribute).lean() as IProjectDocument;
+            const p = await Project.findOne({ _id: project.id }).populate('memberIds', appUserAttributes).lean() as IProjectDocument;
             if (!p) {
                 return project;
             }

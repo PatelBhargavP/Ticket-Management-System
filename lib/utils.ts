@@ -1,4 +1,7 @@
-import { IProjectDetails, IProjectDocument } from "@/models/Project";
+import { IPriority, IPriorityDocument } from "@/models/Priority";
+import { IProjectBase, IProjectDetails, IProjectDocument } from "@/models/Project";
+import { IStatus, IStatusDocument } from "@/models/Status";
+import { ITicketDetails, ITicketDocument } from "@/models/Ticket";
 import { IAppUser, IAppUserDocument } from "@/models/User";
 import { clsx, type ClassValue } from "clsx"
 import { Query, QueryWithHelpers } from "mongoose";
@@ -38,7 +41,25 @@ export function castProjectDocumentToDetails(project: IProjectDocument) {
   return projectDetails;
 }
 
-export const projectMembersAttribute = ["fullname", "firstname", "lastname", "userId", "image", "email", "-_id"];
+export function castTicketDocumentToDetails(ticket: ITicketDocument) {
+  const projectDetails = {
+    ticketId: ticket.id || ticket._id.toString(),
+    name: ticket.name,
+    identifier: ticket.identifier,
+    createdAt: ticket.createdAt,
+    updatedAt: ticket.updatedAt,
+    assignee: ticket.assigneeIds as IAppUser[],
+    status: ticket.statusId as IStatus,
+    priority: ticket.priorityId as IPriority,
+    project: ticket.projectId as IProjectBase
+  } as ITicketDetails;
+  return projectDetails;
+}
+
+export const appUserAttributes = ["fullname", "firstname", "lastname", "userId", "image", "email", "-_id"];
+export const projectBaseAttributes = [ "projectId","name","identifier", "-_id"];
+export const statusAttributes = [ "statusId","name","isDefault","icon","color","isDone", "-_id"];
+export const priorityAttributes = [ "priorityId","name","isDefault","icon","color", "-_id"];
 
 export function castUserDocumentToDetails(user: IAppUserDocument) {
     const userDetails: IAppUser = {
@@ -50,4 +71,47 @@ export function castUserDocumentToDetails(user: IAppUserDocument) {
       image: user.image,
     }
     return userDetails;
+}
+
+
+export function castStatusDocumentToDetails(status: IStatusDocument) {
+    const statusDetails: IStatus = {
+      statusId: status.id || status._id.toString(),
+      name: status.name,
+      icon: status.icon,
+      color: status.color,
+      isDone: status.isDone,
+      isDefault: status.isDefault,
+    }
+    return statusDetails;
+}
+
+export function castPriorityDocumentToDetails(status: IPriorityDocument) {
+    const statusDetails: IPriority = {
+      priorityId: status.id || status._id.toString(),
+      name: status.name,
+      icon: status.icon,
+      color: status.color,
+      isDefault: status.isDefault,
+    }
+    return statusDetails;
+}
+
+export function generateRandomCharString(length: number): string {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+}
+
+
+export function generateRandomNumberString(length: number): string {
+    const characters = '0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
 }

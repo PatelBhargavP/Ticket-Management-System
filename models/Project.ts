@@ -1,6 +1,7 @@
 import mongoose, { CallbackError, Model, ObjectId, Schema, Types } from "mongoose";
 import { AppUser, IAppUser, IAppUserDocument } from "./User";
 import { AppTimeStamp } from "./time-stamp";
+import { generateRandomCharString } from "@/lib/utils";
 
 export interface IProjectBase {
     projectId: string;
@@ -67,33 +68,9 @@ ProjectSchema.set('toJSON', {
   }
 });
 
-export function generateRandomCharString(length: number): string {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
-}
-
-
-export function generateRandomNumberString(length: number): string {
-    const characters = '0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
-}
-
 ProjectSchema.pre('save', async function (next) {
     const doc = this;
     doc.projectId = this.id;
-    console.log("pre save function: ", doc);
-    // const existingUser = await (this.constructor as Model<Project>).findOne({ identifier: randomString });
-    // if (existingUser) {
-    //   return next(new Error('Name already exists'));
-    // }
     if (!doc.identifier) {
         let randomString = '';
         let checkCount = 1;

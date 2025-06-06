@@ -8,8 +8,8 @@ import { IAppUserDocument } from "@/models/User";
 export async function getAppUsers() {
   try {
     await dbConnect();
-    const users = await AppUser.find().lean();
-    return users.map(user => castUserDocumentToDetails(user as IAppUserDocument));
+    const users = await AppUser.find().lean<IAppUserDocument[]>();
+    return users.map(user => castUserDocumentToDetails(user));
   } catch (error) {
     console.error('Error fetching users list:', error);
     throw Error('Failed to process fetch users list request');

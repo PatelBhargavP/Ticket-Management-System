@@ -7,6 +7,7 @@ import { IAppUser } from './models/User';
 import { getUserDetails } from "./app/actions/getUserDetails";
 import { createUser } from "./app/actions/createUser";
 import { upsertUser } from "./app/actions/updateUser";
+import { ensureMetadata } from "./lib/metadata";
 
 
 const providers: Provider[] = [

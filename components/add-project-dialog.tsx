@@ -41,7 +41,7 @@ export default function AddProjectDialog({ open, onClose, onAdd }: AddProjectDia
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-description="Add project dailog">
         <DialogHeader>
           <DialogTitle>Add Project</DialogTitle>
         </DialogHeader>

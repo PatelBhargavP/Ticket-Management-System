@@ -3,6 +3,9 @@ import "./globals.css";
 import { ThemeProviderWrapper } from "@/components/theme-provider-wrapper";
 import React from "react";
 import { Navbar } from "@/components/navbar";
+import { SharedAppProvider } from "@/app/context/SharedAppContext";
+import { getStatuses } from "./actions/getStatuses";
+import { getPriorities } from "./actions/getPriorities";
 
 export const metadata: Metadata = {
   title: "Ticket management system",
@@ -24,10 +27,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-        <Navbar />
-          <div className="px-2">
-            {children}
-          </div>
+          <SharedAppProvider getStatusesPromise={getStatuses()} getPrioritiesPromise={getPriorities()}>
+            <Navbar />
+            <div className="px-2">
+              {children}
+            </div>
+          </SharedAppProvider>
         </ThemeProviderWrapper>
       </body>
     </html>

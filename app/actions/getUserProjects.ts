@@ -4,7 +4,7 @@ import { Project } from "@/models";
 import { IProjectDetails, IProjectDocument } from "@/models/Project";
 import { FilterQuery } from "mongoose";
 import dbConnect from "@/lib/db";
-import { projectMembersAttribute } from "@/lib/utils";
+import { appUserAttributes, castProjectDocumentToDetails } from "@/lib/utils";
 import { IAppUser } from "@/models/User";
 
 export async function getUserProjects(userId: string) {
@@ -14,15 +14,9 @@ export async function getUserProjects(userId: string) {
         if (userId) {
             filters.memberIds = { $in: [userId] }
         }
-        const projects = await Project.find(filters).populate('memberIds', projectMembersAttribute).lean();
-        return projects.map(project => ({
-            projectId: project.projectId,
-            name: project.name,
-            identifier: project.identifier,
-            createdAt: project.createdAt,
-            updatedAt: project.updatedAt,
-            members: project.memberIds as IAppUser[]
-        } as IProjectDetails));
+
+        const projects = await Project.find(filters).populate('memberIds', appUserAttributes).lean<IProjectDocument[]>();
+        return projects.map(project => castProjectDocumentToDetails(project));
     }
     catch (error) {
         console.error('Error fetching user project list:', error);

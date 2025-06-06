@@ -17,7 +17,7 @@ export async function createUser(user: User) {
         }
 
         await AppUser.create(payload);
-        return castUserDocumentToDetails(await AppUser.findOne({ email: payload.email }).lean() as IAppUserDocument);
+        return castUserDocumentToDetails(await AppUser.findOne({ email: payload.email }).lean<IAppUserDocument>() as IAppUserDocument);
     } catch (error) {
         console.error('Error creating user:', error);
         throw Error('Failed to process create users request');

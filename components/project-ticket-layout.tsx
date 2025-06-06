@@ -19,6 +19,7 @@ import { IStatus } from "@/models/Status";
 import { IPriority } from "@/models/Priority";
 import TicketKanbanBoard from "./ticket-kanban-board";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
+import KanbanSkeleton from "./kanban-skeleton";
 
 export default function ProjectTicketLayout(
     {
@@ -108,7 +109,7 @@ export default function ProjectTicketLayout(
             <div className="flex pb-3 w-full justify-end">
                 <Button onClick={onTicketAdd}>Add ticket</Button>
             </div>
-            <Suspense fallback={<TableSkeleton rows={10} />}>
+            <Suspense fallback={ticketData ? <TableSkeleton rows={10} /> : <KanbanSkeleton />}>
                 {
                     ticketData
                         ? <TicketList ticketData={ticketData} onTicketEdit={onTicketEdit} />

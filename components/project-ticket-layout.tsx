@@ -67,7 +67,7 @@ export default function ProjectTicketLayout(
             //     setShowPrompt(true);
             //     return;
             // } else {
-                setTicket(null);
+            setTicket(null);
             // }
         }
         setOpenSheet(state);
@@ -97,12 +97,16 @@ export default function ProjectTicketLayout(
             <div className="flex py-3 w-full justify-around items-center">
                 <Tabs defaultValue={contentType}>
                     <TabsList>
-                        <TabsTrigger value="list">
-                            <Link href={`/projects/${project.identifier}/list`} >List</Link>
-                        </TabsTrigger>
-                        <TabsTrigger value="board">
-                            <Link href={`/projects/${project.identifier}/board`} >Board</Link>
-                        </TabsTrigger>
+                        <Link href={`/projects/${project.identifier}/list`} >
+                            <TabsTrigger className="cursor-pointer" value="list">
+                                List
+                            </TabsTrigger>
+                        </Link>
+                        <Link href={`/projects/${project.identifier}/board`} >
+                            <TabsTrigger className="cursor-pointer" value="board">
+                                Board
+                            </TabsTrigger>
+                        </Link>
                     </TabsList>
                 </Tabs>
             </div>

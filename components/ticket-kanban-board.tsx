@@ -21,6 +21,16 @@ export default function TicketKanbanBoard({ groupedTicketsPromise, onTicketEdit 
     const handleCardClick = (ticket: ITicketDetails) => {
         onTicketEdit(ticket);
     }
+
+    if (!groupKeys.length) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className='flex flex-col justify-around'>
+                    No tickets created yet!
+                </div>
+            </div>
+        )
+    }
     return (
         <div className="w-full overflow-x-auto">
             <div className="flex gap-4 min-w-full px-2 pb-2">

@@ -1,17 +1,92 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# 🎫 Ticket Management System
+
+A full-featured ticket management system built using **Next.js (App Router)**, **TypeScript**, **MongoDB** with **Mongoose**, and **NextAuth** for authentication. The application supports project-based ticket organization with modern UI components powered by **shadcn/ui** and **Tailwind CSS**.
+
+## 📁 Project Structure
+
+/
+├── app/
+│ ├── layout.tsx
+│ ├── not-found.tsx
+│ ├── context/
+│ │ ├── ProjectTicketContext.tsx // for sharing data among UI components in client side at project level
+│ │ ├── ShareAppContext.tsx // for sharing data among UI components in client side at app level like statuses priorities etc
+│ ├── login/
+│ │ ├── page.tsx
+│ ├── projects/
+│ │ ├── page.tsx
+│ │ ├── [project_identifier]//
+│ │ │ ├── layout.tsx
+│ │ │ ├── list/
+│ │ │ │ ├── page.tsx
+│ │ │ └── board/
+│ │ │ │ ├── page.tsx
+├── lib/ # temp data, utility function, DB connection utils
+│ ├── utils.ts # Helper functions
+├── models/ # Mongoose models
+├── middleware.ts #For auth check and route protection
+├── components/ # UI components
+└── ...
+
+---
+
+## 🚀 Features
+
+- 🔐 Google Authentication via NextAuth
+- 🧠 TypeScript for strict type safety
+- 🧱 MongoDB + Mongoose for flexible schema-based storage
+- 🎨 Beautiful UI with Tailwind CSS + shadcn/ui components
+- 📦 NPM-based dependency management
+- 📂 Project-based ticket organization with list and board views
+
+---
+
+## 🧪 Technologies
+
+| Tech             | Description                            |
+|------------------|----------------------------------------|
+| Next.js (Pages)  | Core React framework with routing      |
+| MongoDB          | NoSQL document store                   |
+| Mongoose         | ODM for MongoDB                        |
+| NextAuth.js      | Authentication (Google)                |
+| TypeScript       | Static typing                          |
+| Tailwind CSS     | Utility-first CSS framework            |
+| shadcn/ui        | Accessible, headless UI components     |
+
+---
+
+## 🧰 Getting Started
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/PatelBhargavP/Ticket-Management-System.git
+cd Ticket-Management-System
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Set up .env.local
+
+```bash
+MONGODB_URI=<your-mongodb-uri>
+NEXTAUTH_SECRET=<your-secret>
+GOOGLE_CLIENT_ID=<your-client-id>
+GOOGLE_CLIENT_SECRET=<your-client-secret>
+```
+
+### 4. Getting Started
 
 First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

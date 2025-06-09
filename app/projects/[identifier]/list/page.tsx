@@ -22,3 +22,13 @@ export default async function TicketListPage({params}: {params: Promise<{ identi
     </>
   );
 }
+
+export async function generateMetadata({ params }: {params: Promise<{ identifier: string }>}) {
+  const projectIdentifier = (await params).identifier;
+  const projectDetails = await projectByIdentifierCache(projectIdentifier)();
+
+  return {
+    title: `List - ${projectDetails.name}`,
+    description: `This page lists the tickets of Project: ${projectDetails.name}. Tickets assigned to all users is listed here.`,
+  };
+}

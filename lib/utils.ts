@@ -45,6 +45,7 @@ export function castTicketDocumentToDetails(ticket: ITicketDocument) {
   const projectDetails = {
     ticketId: ticket.id || ticket._id.toString(),
     name: ticket.name,
+    description: ticket.description,
     identifier: ticket.identifier,
     createdAt: ticket.createdAt,
     updatedAt: ticket.updatedAt,

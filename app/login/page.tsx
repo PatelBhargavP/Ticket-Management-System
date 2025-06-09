@@ -27,3 +27,12 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
     </div>
   )
 }
+
+
+export async function generateMetadata() {
+
+  return {
+    title: `Login - Ticket Menagement System`,
+    description: `Login using your infocusp email.`,
+  };
+}

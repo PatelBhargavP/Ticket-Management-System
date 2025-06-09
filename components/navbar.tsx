@@ -18,8 +18,8 @@ export async function Navbar() {
     }
     return (
         <>
-            <div className="p-2 flex justify-between items-center">
-                <div>
+            <div className="px-2 flex justify-between items-center">
+                <div className='min-h-[64px] flex items-center'>
                     <h3 className='text-xl'>Ticket management system</h3>
                 </div>
                 <div className='inline-flex content-center'>

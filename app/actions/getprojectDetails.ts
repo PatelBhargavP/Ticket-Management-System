@@ -10,7 +10,10 @@ export async function getProjectDetails(filter: FilterQuery<IProjectDocument>) {
     try {
         await dbConnect();
         const project = await Project.findOne(filter)
-            .populate('memberIds', appUserAttributes).lean<IProjectDocument>();
+            .populate('memberIds', appUserAttributes)
+            .populate('updatedById', appUserAttributes)
+            .populate('createdById', appUserAttributes)
+            .lean<IProjectDocument>();
 
         if (!project) {
             throw Error('Project not found');

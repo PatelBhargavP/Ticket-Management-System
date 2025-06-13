@@ -17,8 +17,12 @@ export async function createProject(data: Partial<IProjectDocument>) {
             if (session?.userId) {
                 data['memberIds'] = [session.userId];
             }
-            const project = await Project.create(data);
-            const p = await Project.findOne({ _id: project.id }).populate('memberIds', appUserAttributes).lean() as IProjectDocument;
+            const project = await Project.create({ ...data, updatedById: session?.userId, createdById: session?.userId });
+            const p = await Project.findOne({ _id: project.id })
+                .populate('memberIds', appUserAttributes)
+                .populate('updatedById', appUserAttributes)
+                .populate('createdById', appUserAttributes)
+                .lean() as IProjectDocument;
             if (!p) {
                 return project;
             }

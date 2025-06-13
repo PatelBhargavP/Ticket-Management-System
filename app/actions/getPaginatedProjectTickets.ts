@@ -35,7 +35,10 @@ export async function getPaginatedProjectTickets(projectId: string, filter: Filt
       .populate('assigneeIds', appUserAttributes)
       .populate('projectId', projectBaseAttributes)
       .populate('statusId', statusAttributes)
-      .populate('priorityId', priorityAttributes).lean<ITicketDocument[]>()
+      .populate('priorityId', priorityAttributes)
+      .populate('updatedById', appUserAttributes)
+      .populate('createdById', appUserAttributes)
+      .lean<ITicketDocument[]>()
   ])
 
   return {

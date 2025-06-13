@@ -2,12 +2,15 @@
 
 import { IProjectDetails } from '@/models/Project';
 import { ITicketDetails } from '@/models/Ticket'
+import { ITransactionDetails } from '@/models/Transaction';
 import { IAppUser } from '@/models/User';
 import React, { createContext, useContext, useState } from 'react'
 
 export interface ProjectTicketContextType {
     ticket: ITicketDetails | null;
     setTicket: (selectedTicket: ITicketDetails | null) => void;
+    transactions: ITransactionDetails[] | null;
+    setTransactions: (transactions: ITransactionDetails[] | null) => void;
     project: IProjectDetails;
     setProject: (project: IProjectDetails) => void;
     projectUsers: IAppUser[];
@@ -20,16 +23,19 @@ export const ProjectTicketProvider = (
     {
         children,
         initialTicket,
+        initialTransaction,
         initialProject,
         initialProjectUsers
     }: {
         children: React.ReactNode;
         initialTicket?: ITicketDetails | null;
+        initialTransaction?: ITransactionDetails[] | null;
         initialProject: IProjectDetails;
         initialProjectUsers: IAppUser[]
     }
 ) => {
     const [ticket, setTicket] = useState(initialTicket || null);
+    const [transactions, setTransactions] = useState(initialTransaction || null);
     const [project, setProject] = useState(initialProject);
     const [projectUsers, setProjectUsers] = useState(initialProjectUsers);
 
@@ -38,6 +44,8 @@ export const ProjectTicketProvider = (
             value={{
                 ticket,
                 setTicket,
+                transactions,
+                setTransactions,
                 project,
                 setProject,
                 projectUsers,

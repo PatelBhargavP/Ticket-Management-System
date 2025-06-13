@@ -15,7 +15,11 @@ export async function getUserProjects(userId: string) {
             filters.memberIds = { $in: [userId] }
         }
 
-        const projects = await Project.find(filters).populate('memberIds', appUserAttributes).lean<IProjectDocument[]>();
+        const projects = await Project.find(filters)
+            .populate('memberIds', appUserAttributes)
+            .populate('updatedById', appUserAttributes)
+            .populate('createdById', appUserAttributes)
+            .lean<IProjectDocument[]>();
         return projects.map(project => castProjectDocumentToDetails(project));
     }
     catch (error) {

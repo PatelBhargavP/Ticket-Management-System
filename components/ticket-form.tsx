@@ -16,7 +16,6 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
 import { createTicket } from "@/app/actions/createTicket";
 import { updateTicket } from "@/app/actions/updateTicket";
-import { useEffect } from "react";
 import { ITicketDetails } from "@/models/Ticket";
 import { useRouter } from "next/navigation";
 import { UserAvatarGroup } from "./user-avatar-group";
@@ -48,7 +47,7 @@ type Props = {
 export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
 
     const router = useRouter();
-    const { ticket, projectUsers, setTicket } = useProjectTicket();
+    const { ticket, projectUsers, setTransactions } = useProjectTicket();
     const { statuses, priorities } = useSharedApp();
 
 
@@ -82,6 +81,7 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
             await createTicket(data.projectId, data);
         } else {
             await updateTicket(data.ticketId, data.projectId, data);
+            setTransactions(null)
         }
         // setTicket(null);
         onDirtyChange(false);
@@ -112,189 +112,186 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
     }
 
     return (
-        <div className="px-3">
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
+                <FormField
+                    name="name"
+                    control={form.control}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Title</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Title of this ticket" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    name="assigneeIds"
+                    control={form.control}
+                    render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                            <FormLabel>Assignee</FormLabel>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <FormControl>
+                                        {
+                                            <Button
+                                                variant="outline"
+                                                role="combobox"
+                                                className={cn(
+                                                    "flex text-muted-foreground border-0 size-12 items-center"
+                                                )}
+                                                style={{
+                                                    width: !field.value.length ? '130px' : `${Math.min((field.value.length * (field.value.length === 1 ? 36 : 30)), 4 * 30) + 24}px`,
+                                                }}
+                                            >
+                                                {
+                                                    field.value.length
+                                                        ? <UserAvatarGroup users={field.value.reduce((previousVal, currentVal) => {
+                                                            const user = projectUsers.find(u => u.userId === currentVal);
+                                                            if (user) {
+                                                                previousVal.push(user);
+                                                            }
+                                                            return previousVal;
+                                                        }, [] as IAppUser[])} />
+                                                        : <span className="inline-flex items-center justify-between">Add Assignee <ChevronsUpDown className="opacity-50" /></span>}
+
+                                            </Button>
+                                        }
+                                    </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[200px] p-0">
+                                    <Command>
+                                        <CommandInput
+                                            placeholder="Search user..."
+                                            className="h-9"
+                                        />
+                                        <CommandList>
+                                            <CommandEmpty>No user found.</CommandEmpty>
+                                            <CommandGroup>
+                                                {projectUsers.map((user) => (
+                                                    <CommandItem
+                                                        value={user.fullname}
+                                                        key={user.userId}
+                                                        onSelect={() => {
+                                                            form.setValue(
+                                                                'assigneeIds',
+                                                                field.value.includes(user.userId)
+                                                                    ? field.value.filter(val => val !== user.userId)
+                                                                    : field.value.concat([user.userId])
+                                                            )
+                                                        }}
+                                                    >
+                                                        <UserAvatar user={user} />
+                                                        <Check
+                                                            className={cn(
+                                                                "ml-auto",
+                                                                field.value.includes(user.userId)
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                            )}
+                                                        />
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <div className="w-full grid grid-cols-2 gap-2">
                     <FormField
-                        name="name"
+                        name="statusId"
                         control={form.control}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Title</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Title of this ticket" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        name="assigneeIds"
-                        control={form.control}
-                        render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                                <FormLabel>Assignee</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <FormControl>
-                                            {
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    className={cn(
-                                                        "flex text-muted-foreground border-0 size-12 items-center"
-                                                    )}
+                                <FormLabel>Status</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        {getStatusTrigger(field.value)}
+                                    </FormControl>
+                                    <SelectContent>
+                                        {statuses.map((status) => {
+                                            return (
+                                                <SelectItem
+                                                    key={status.statusId}
+                                                    value={status.statusId}
+                                                    className="my-1"
                                                     style={{
-                                                        width: !field.value.length ? '130px' : `${Math.min((field.value.length * (field.value.length === 1 ? 36 : 30)), 4 * 30) + 24}px`,
-                                                    }}
-                                                >
-                                                    {
-                                                        field.value.length
-                                                            ? <UserAvatarGroup users={field.value.reduce((previousVal, currentVal) => {
-                                                                const user = projectUsers.find(u => u.userId === currentVal);
-                                                                if (user) {
-                                                                    previousVal.push(user);
-                                                                }
-                                                                return previousVal;
-                                                            }, [] as IAppUser[])} />
-                                                            : <span className="inline-flex items-center justify-between">Add Assignee <ChevronsUpDown className="opacity-50" /></span>}
-
-                                                </Button>
-                                            }
-                                        </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[200px] p-0">
-                                        <Command>
-                                            <CommandInput
-                                                placeholder="Search user..."
-                                                className="h-9"
-                                            />
-                                            <CommandList>
-                                                <CommandEmpty>No user found.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {projectUsers.map((user) => (
-                                                        <CommandItem
-                                                            value={user.fullname}
-                                                            key={user.userId}
-                                                            onSelect={() => {
-                                                                form.setValue(
-                                                                    'assigneeIds',
-                                                                    field.value.includes(user.userId)
-                                                                        ? field.value.filter(val => val !== user.userId)
-                                                                        : field.value.concat([user.userId])
-                                                                )
-                                                            }}
-                                                        >
-                                                            <UserAvatar user={user} />
-                                                            <Check
-                                                                className={cn(
-                                                                    "ml-auto",
-                                                                    field.value.includes(user.userId)
-                                                                        ? "opacity-100"
-                                                                        : "opacity-0"
-                                                                )}
-                                                            />
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
+                                                        color: status.color,
+                                                        backgroundColor: `${status.color}20`, // add 20 for ~12% opacity
+                                                    }} >
+                                                    <DynamicIcon iconName={status.icon} color={status.color} /> {status.name}
+                                                </SelectItem>
+                                            );
+                                        })}
+                                    </SelectContent>
+                                </Select>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
 
-                    <div className="w-full grid grid-cols-2 gap-2">
-                        <FormField
-                            name="statusId"
-                            control={form.control}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Status</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                            {getStatusTrigger(field.value)}
-                                        </FormControl>
-                                        <SelectContent>
-                                            {statuses.map((status) => {
-                                                return (
-                                                    <SelectItem
-                                                        key={status.statusId}
-                                                        value={status.statusId}
-                                                        className="my-1"
-                                                        style={{
-                                                            color: status.color,
-                                                            backgroundColor: `${status.color}20`, // add 20 for ~12% opacity
-                                                        }} >
-                                                        <DynamicIcon iconName={status.icon} color={status.color} /> {status.name}
-                                                    </SelectItem>
-                                                );
-                                            })}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            name="priorityId"
-                            control={form.control}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Priority</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                            {getPriorityTrigger(field.value)}
-                                        </FormControl>
-                                        <SelectContent>
-                                            {priorities.map((priority) => {
-                                                return (
-
-                                                    <SelectItem
-                                                        key={priority.priorityId}
-                                                        value={priority.priorityId}
-                                                        className="my-1"
-                                                        style={{
-                                                            color: priority.color,
-                                                            backgroundColor: `${priority.color}20`, // add 20 for ~12% opacity
-                                                        }} >
-                                                        <DynamicIcon iconName={priority.icon} color={priority.color} /> {priority.name}
-                                                    </SelectItem>);
-                                            })}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
                     <FormField
-                        name="description"
+                        name="priorityId"
                         control={form.control}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Description</FormLabel>
-                                <FormControl>
-                                    <Textarea
-                                        placeholder="Tell us a little bit about this ticket!"
-                                        className="resize-none"
-                                        {...field}
-                                    />
-                                </FormControl>
+                                <FormLabel>Priority</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        {getPriorityTrigger(field.value)}
+                                    </FormControl>
+                                    <SelectContent>
+                                        {priorities.map((priority) => {
+                                            return (
+
+                                                <SelectItem
+                                                    key={priority.priorityId}
+                                                    value={priority.priorityId}
+                                                    className="my-1"
+                                                    style={{
+                                                        color: priority.color,
+                                                        backgroundColor: `${priority.color}20`, // add 20 for ~12% opacity
+                                                    }} >
+                                                    <DynamicIcon iconName={priority.icon} color={priority.color} /> {priority.name}
+                                                </SelectItem>);
+                                        })}
+                                    </SelectContent>
+                                </Select>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
+                </div>
+                <FormField
+                    name="description"
+                    control={form.control}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                                <Textarea
+                                    placeholder="Tell us a little bit about this ticket!"
+                                    className="resize-none"
+                                    {...field}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
 
 
-                    <Button type="submit">Submit</Button>
-                </form>
-            </Form>
-
-        </div>
+                <Button type="submit">Submit</Button>
+            </form>
+        </Form>
     )
 }

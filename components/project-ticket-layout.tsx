@@ -14,12 +14,13 @@ import { IAppUser } from "@/models/User";
 import TicketList from "./ticket-list";
 import TableSkeleton from "./table-skeleton";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "./ui/breadcrumb";
-import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { IStatus } from "@/models/Status";
 import { IPriority } from "@/models/Priority";
 import TicketKanbanBoard from "./ticket-kanban-board";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
 import KanbanSkeleton from "./kanban-skeleton";
+import GroupedTransactions from "./grouped-transactions";
 
 export default function ProjectTicketLayout(
     {
@@ -47,6 +48,8 @@ export default function ProjectTicketLayout(
         assignee: [] as IAppUser[],
         createdAt: new Date(),
         updatedAt: new Date(),
+        createdBy: {} as IAppUser,
+        updatedBy: {} as IAppUser,
         ticketId: ''
     } as ITicketDetails;
 
@@ -124,16 +127,36 @@ export default function ProjectTicketLayout(
 
             </Suspense>
             <Sheet open={openSheet} onOpenChange={openSheetHandler}>
-                <SheetContent>
+                <SheetContent className="w-full sm:w-[600px] sm:max-w-[600px]">
                     <SheetHeader>
                         <SheetTitle>{ticket?.ticketId ? 'Edit' : 'Create'} Ticket</SheetTitle>
                     </SheetHeader>
 
-                    {ticket ? <TicketForm
-                        onDirtyChange={(dirty) => setIsFormDirty(dirty)} onSubmitSuccess={() => {
-                            setIsFormDirty(false);
-                            openSheetHandler(false);
-                        }} /> : ''}
+                    {ticket &&
+
+                        <div className="px-3">
+                            <Tabs defaultValue="details">
+
+                                <TabsList>
+                                    <TabsTrigger value="details">Details</TabsTrigger>
+                                    {ticket.ticketId && <TabsTrigger value="activity">Activity History</TabsTrigger>}
+                                </TabsList>
+
+                                <TabsContent className="p-2 max-h-[82vh] overflow-x-scroll" value="details">
+                                    <TicketForm
+                                        onDirtyChange={(dirty) => setIsFormDirty(dirty)} onSubmitSuccess={() => {
+                                            setIsFormDirty(false);
+                                            openSheetHandler(false);
+                                        }} />   
+                                </TabsContent>
+
+                                <TabsContent className="p-2 max-h-[82vh] overflow-x-scroll" value="activity">
+                                    <GroupedTransactions />
+                                </TabsContent>
+
+                            </Tabs>
+                        </div>
+                    }
                 </SheetContent>
             </Sheet>
 

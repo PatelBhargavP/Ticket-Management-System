@@ -19,6 +19,8 @@ export interface ITicketDetails extends ITicketBase, AppTimeStamp {
     project: IProjectBase;
     status: IStatus;
     priority: IPriority;
+    createdBy: IAppUser;
+    updatedBy: IAppUser;
 }
 
 export interface ITicket extends ITicketBase, AppTimeStamp {
@@ -27,6 +29,8 @@ export interface ITicket extends ITicketBase, AppTimeStamp {
     statusId: Types.ObjectId | IStatus | string;
     priorityId: Types.ObjectId | IPriority | string;
     taskPrefix: string;
+    createdById: Types.ObjectId | IAppUser;
+    updatedById: Types.ObjectId| IAppUser;
 }
 
 export interface ITicketDocument extends ITicket, Document {
@@ -84,6 +88,16 @@ const TicketSchema = new Schema<ITicketDocument>(
         identifier: {
             type: String,
             default: ''
+        },
+        createdById: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: AppUser.modelName,
+            required: true
+        },
+        updatedById: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: AppUser.modelName,
+            required: true
         }
     },
     {
@@ -105,12 +119,12 @@ TicketSchema.set('toJSON', {
 TicketSchema.pre('save', async function (next) {
     const doc = this;
     doc.ticketId = this.id;
-    console.log("pre save function: ", doc);
+    // console.log("pre save function: ", doc);
     if (!doc.identifier) {
         let randomString = '';
-        let taskCount = await (await (this.constructor as Model<ITicketDocument>).find()).length;
+        let taskCount = await (await (this.constructor as Model<ITicketDocument>).find({ projectId: doc.projectId })).length;
         let isUnique = false
-        const projectDetails = await (this.constructor as Model<IProjectDocument>).findOne({ projectId: doc.projectId });
+        const projectDetails = await Project.findOne({ projectId: doc.projectId }).lean<{identifier: string; name: string;}>();
         do {
             randomString = `${projectDetails?.identifier}-${taskCount + 1}`;
             try {

@@ -17,7 +17,10 @@ export async function getTicketsGrouped(groupBy: GroupingType | null, projectId:
         .populate('assigneeIds', appUserAttributes)
         .populate('projectId', projectBaseAttributes)
         .populate('statusId', statusAttributes)
-        .populate('priorityId', priorityAttributes).lean<ITicketDocument[]>()).map(ticket => castTicketDocumentToDetails(ticket))
+        .populate('priorityId', priorityAttributes)
+        .populate('updatedById', appUserAttributes)
+        .populate('createdById', appUserAttributes)
+        .lean<ITicketDocument[]>()).map(ticket => castTicketDocumentToDetails(ticket))
 
     // if (!groupBy) return tickets;
 

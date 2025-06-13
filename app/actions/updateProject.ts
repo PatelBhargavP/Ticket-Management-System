@@ -4,10 +4,13 @@ import dbConnect from "@/lib/db";
 import { IProjectDocument, Project } from "@/models/Project";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { castProjectDocumentToDetails, appUserAttributes } from "@/lib/utils";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/auth";
 
 export async function updateProject(projectId: string, data: Partial<IProjectDocument>) {
     try {
         await dbConnect();
+        const session = await getServerSession(authOptions);
         let project: IProjectDocument | null;
         if (!projectId) {
             throw Error('Cannot find project without id');
@@ -23,9 +26,13 @@ export async function updateProject(projectId: string, data: Partial<IProjectDoc
             if (data.memberIds) {
                 payload.memberIds = data.memberIds
             }
-            await Project.updateOne({ _id: projectId }, { $set: payload });
-            const p = await Project.findOne({ _id: projectId }).populate('memberIds', appUserAttributes).lean<IProjectDocument>();
-            if(!p) {
+            await Project.updateOne({ _id: projectId }, { $set: { ...payload, updatedById: session?.userId, createdById: session?.userId } });
+            const p = await Project.findOne({ _id: projectId })
+                .populate('memberIds', appUserAttributes)
+                .populate('updatedById', appUserAttributes)
+                .populate('createdById', appUserAttributes)
+                .lean<IProjectDocument>();
+            if (!p) {
                 return castProjectDocumentToDetails(project);
             }
             const updatedProject = castProjectDocumentToDetails(p);

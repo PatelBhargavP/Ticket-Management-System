@@ -12,11 +12,15 @@ export interface IProjectBase {
 
 export interface IProjectDetails extends IProjectBase, AppTimeStamp {
     members: IAppUser[];
+    createdBy: IAppUser;
+    updatedBy: IAppUser;
 }
 
 export interface IProject extends IProjectBase, AppTimeStamp {
     memberIds: Types.ObjectId[] | IAppUserDocument[] | string[];
     taskIds: string[];
+    createdById: Types.ObjectId | IAppUser;
+    updatedById: Types.ObjectId | IAppUser;
 }
 
 // Merging ITodo interface with mongoose's Document interface to create 
@@ -51,6 +55,16 @@ const ProjectSchema = new Schema<IProjectDocument>(
         identifier: {
             type: String,
             default: ''
+        },
+        createdById: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: AppUser.modelName,
+            required: true
+        },
+        updatedById: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: AppUser.modelName,
+            required: true
         }
     },
     {
@@ -60,24 +74,24 @@ const ProjectSchema = new Schema<IProjectDocument>(
 );
 // Automatically convert `_id` to `id`
 ProjectSchema.set('toJSON', {
-  virtuals: true,
-  versionKey: false,
-  transform: (_, ret) => {
-    ret.id = ret._id;
-    delete ret._id;
-  }
+    virtuals: true,
+    versionKey: false,
+    transform: (_, ret) => {
+        ret.id = ret._id;
+        delete ret._id;
+    }
 });
 
 ProjectSchema.pre('save', async function (next) {
     const doc = this;
-    doc.projectId = this.id;
+    doc.projectId = this._id.toString();
     if (!doc.identifier) {
         let randomString = '';
         let checkCount = 1;
-        let isUnique = false
+        let isUnique = false;
         do {
             randomString = checkCount < 100 && doc.name.length > 3
-            ? `${doc.name.substring(0, 3)}-${checkCount}` : `${generateRandomCharString(3)}-${checkCount}`; // Generate a unique identifier
+                ? `${doc.name.substring(0, 3)}-${checkCount}` : `${generateRandomCharString(3)}-${checkCount}`; // Generate a unique identifier
             checkCount = checkCount < 100 ? checkCount + 1 : 1;
             try {
                 // Attempt to find a document with the same customId

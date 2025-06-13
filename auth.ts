@@ -7,8 +7,6 @@ import { IAppUser } from './models/User';
 import { getUserDetails } from "./app/actions/getUserDetails";
 import { createUser } from "./app/actions/createUser";
 import { upsertUser } from "./app/actions/updateUser";
-import { ensureMetadata } from "./lib/metadata";
-
 
 const providers: Provider[] = [
   // Credentials({
@@ -45,7 +43,7 @@ export const authOptions: AuthOptions = {
     signIn: "/login",
   },
   session: {
-    maxAge: 15 * 60, // 10 mins,
+    maxAge: 60 * 60, // 60 mins,
     strategy: 'jwt'
   },
   callbacks: {

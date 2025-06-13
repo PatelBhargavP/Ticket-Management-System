@@ -137,7 +137,7 @@ export default function ProjectList(
             </Table>
 
             <Sheet open={openSheet} onOpenChange={setOpenSheet}>
-                <SheetContent>
+                <SheetContent  className="w-full sm:w-[600px] sm:max-w-[600px]">
                     <SheetHeader>
                         <SheetTitle>Edit Project</SheetTitle>
                     </SheetHeader>

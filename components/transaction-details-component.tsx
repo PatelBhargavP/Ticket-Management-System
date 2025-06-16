@@ -23,7 +23,7 @@ export default function TransactionDetailsComponent({ transaction }: Transaction
         </p>
     ]
 
-    const arrowElement = <ArrowRightCircleIcon className="mx-2 my-1" />;
+    const arrowElement = <ArrowRightCircleIcon className="mx-2 my-1 min-w-[50px] min-h-[25px]" />;
     const recordClass = "grid grid-cols-4 gap-1 items-center";
     const recordValueClass = "col-span-3 flex justify-left items-center";
     const recordlabelClass = "col-span-1";

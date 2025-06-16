@@ -48,7 +48,7 @@ export function ProfileDropdown({
                         <AvatarImage src={avatarUrl} alt={name} referrerPolicy={'no-referrer'} />
                         <AvatarFallback>{name?.split(" ").map(segment => (segment && segment[0])).join('')}</AvatarFallback>
                     </Avatar>
-                    {name}
+                    <span className='truncate max-sm:max-w-[120px]' title={name}>{name}</span>
                 </span>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-48 mt-2 mr-2">

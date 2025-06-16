@@ -53,6 +53,7 @@
   --color-red-800: oklch(0.444 0.177 26.899);
   --color-red-900: oklch(0.396 0.141 25.723);
   --color-red-950: oklch(0.258 0.092 26.042);
+  --breakpoint-xs: 30rem;
 }
 
 :root {

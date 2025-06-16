@@ -21,6 +21,7 @@ import TicketKanbanBoard from "./ticket-kanban-board";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
 import KanbanSkeleton from "./kanban-skeleton";
 import GroupedTransactions from "./grouped-transactions";
+import { ScrollArea } from "./ui/scroll-area";
 
 export default function ProjectTicketLayout(
     {
@@ -127,7 +128,7 @@ export default function ProjectTicketLayout(
 
             </Suspense>
             <Sheet open={openSheet} onOpenChange={openSheetHandler}>
-                <SheetContent className="w-full sm:w-[600px] sm:max-w-[600px]">
+                <SheetContent className="w-full sm:w-[600px] sm:max-w-[600px] xl:w-[900px] xl:max-w-[900px]">
                     <SheetHeader>
                         <SheetTitle>{ticket?.ticketId ? 'Edit' : 'Create'} Ticket</SheetTitle>
                     </SheetHeader>
@@ -141,18 +142,19 @@ export default function ProjectTicketLayout(
                                     <TabsTrigger value="details">Details</TabsTrigger>
                                     {ticket.ticketId && <TabsTrigger value="activity">Activity History</TabsTrigger>}
                                 </TabsList>
+                                <ScrollArea className='max-h-[calc(100vh-115px)] overflow-auto'>
+                                    <TabsContent className="p-2" value="details">
+                                        <TicketForm
+                                            onDirtyChange={(dirty) => setIsFormDirty(dirty)} onSubmitSuccess={() => {
+                                                setIsFormDirty(false);
+                                                openSheetHandler(false);
+                                            }} />
+                                    </TabsContent>
 
-                                <TabsContent className="p-2 max-h-[82vh] overflow-x-scroll" value="details">
-                                    <TicketForm
-                                        onDirtyChange={(dirty) => setIsFormDirty(dirty)} onSubmitSuccess={() => {
-                                            setIsFormDirty(false);
-                                            openSheetHandler(false);
-                                        }} />   
-                                </TabsContent>
-
-                                <TabsContent className="p-2 max-h-[82vh] overflow-x-scroll" value="activity">
-                                    <GroupedTransactions />
-                                </TabsContent>
+                                    <TabsContent className="p-2 " value="activity">
+                                        <GroupedTransactions />
+                                    </TabsContent>
+                                </ScrollArea>
 
                             </Tabs>
                         </div>

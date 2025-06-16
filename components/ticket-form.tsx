@@ -92,6 +92,7 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
     const getStatusTrigger = (statusId: string) => {
         const status = statuses.find(s => s.statusId === statusId);
         return (<SelectTrigger
+            className="max-w-[200px] min-w-[150px] mr-3"
             style={{
                 color: status?.color || '',
                 backgroundColor: status?.color ? `${status?.color}20` : '', // add 20 for ~12% opacity
@@ -103,6 +104,7 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
     const getPriorityTrigger = (priorityId: string) => {
         const priority = priorities.find(p => p.priorityId === priorityId);
         return (<SelectTrigger
+            className="max-w-[200px] min-w-[150px]"
             style={{
                 color: priority?.color || '',
                 backgroundColor: priority?.color ? `${priority?.color}20` : '', // add 20 for ~12% opacity
@@ -206,7 +208,7 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
                     )}
                 />
 
-                <div className="w-full grid grid-cols-2 gap-2">
+                <div className="w-full inline-flex justify-start">
                     <FormField
                         name="statusId"
                         control={form.control}
@@ -271,6 +273,7 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
                         )}
                     />
                 </div>
+
                 <FormField
                     name="description"
                     control={form.control}
@@ -280,7 +283,7 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
                             <FormControl>
                                 <Textarea
                                     placeholder="Tell us a little bit about this ticket!"
-                                    className="resize-none"
+                                    className="resize-none sm:min-h-[200px]"
                                     {...field}
                                 />
                             </FormControl>

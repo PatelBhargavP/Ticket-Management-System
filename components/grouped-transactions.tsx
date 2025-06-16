@@ -45,7 +45,7 @@ export default function GroupedTransactions() {
     groupOrder = groupOrder.filter(x => groupedTransactions[x]);
 
     return (
-        <div className='h-full overflow-y-scroll'>
+        <div>
             <Accordion
                 type="single"
                 collapsible

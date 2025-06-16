@@ -12,6 +12,7 @@ import { CircleX, FilePenLine } from "lucide-react";
 import { Input } from "./ui/input";
 import { useRouter } from "next/navigation";
 import { UserAvatarGroup } from "./user-avatar-group";
+import { ScrollArea } from "./ui/scroll-area";
 
 
 export default function ProjectList(
@@ -94,50 +95,52 @@ export default function ProjectList(
     return (
         <>
             {header}
-            <Table>
-                <TableHeader className="bg-muted text-muted-foreground uppercase text-xs font-extralight tracking-wide">
-                    <TableRow className="[&>th]:px-4 [&>th]:py-2 [&>th]:text-left">
-                        <TableHead>Name</TableHead>
-                        <TableHead>Identifier</TableHead>
-                        <TableHead>Members</TableHead>
-                        <TableHead>
-                            <span className="w-full flex justify-end pr-3">
-                                Action
-                            </span>
-                        </TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {filteredList.map((item) => (
-                        <TableRow
-                            key={item.projectId}
-                            onClick={() => handleRowClick(item)}
-                            className="cursor-pointer hover:bg-muted [&>td]:px-4"
-                        >
-                            <TableCell>{item.name}</TableCell>
-                            <TableCell>{item.identifier}</TableCell>
-                            <TableCell>
-                                <UserAvatarGroup users={item.members} />
-                            </TableCell>
-                            <TableCell>
-                                <span className="w-full flex justify-end pr-2">
-                                    <Button
-                                        size="sm"
-                                        title="Edit Project"
-                                        onClick={(e) => handleEditClick(e, item)}
-                                        variant="outline"
-                                    >
-                                        <FilePenLine />
-                                    </Button>
+            <ScrollArea className="max-h-[calc(100vh-140px)] overflow-auto">
+                <Table>
+                    <TableHeader className="bg-muted text-muted-foreground uppercase text-xs font-extralight tracking-wide sticky top-0 z-10">
+                        <TableRow className="[&>th]:px-4 [&>th]:py-2 [&>th]:text-left">
+                            <TableHead className="max-w-[150px] sm:max-w-[450px] max-xl:max-w-[650px]">Name</TableHead>
+                            <TableHead className="hidden sm:table-cell">Identifier</TableHead>
+                            <TableHead className="hidden xs:table-cell">Members</TableHead>
+                            <TableHead>
+                                <span className="w-full flex justify-end pr-3">
+                                    Action
                                 </span>
-                            </TableCell>
+                            </TableHead>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredList.map((item) => (
+                            <TableRow
+                                key={item.projectId}
+                                onClick={() => handleRowClick(item)}
+                                className="cursor-pointer hover:bg-muted [&>td]:px-4"
+                            >
+                                <TableCell className="max-w-[150px] sm:max-w-[450px] max-xl:max-w-[650px] truncate" title={item.name}>{item.name}</TableCell>
+                                <TableCell className="hidden sm:table-cell">{item.identifier}</TableCell>
+                                <TableCell className="hidden xs:table-cell">
+                                    <UserAvatarGroup users={item.members} />
+                                </TableCell>
+                                <TableCell>
+                                    <span className="w-full flex justify-end pr-2">
+                                        <Button
+                                            size="sm"
+                                            title="Edit Project"
+                                            onClick={(e) => handleEditClick(e, item)}
+                                            variant="outline"
+                                        >
+                                            <FilePenLine />
+                                        </Button>
+                                    </span>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </ScrollArea>
 
             <Sheet open={openSheet} onOpenChange={setOpenSheet}>
-                <SheetContent  className="w-full sm:w-[600px] sm:max-w-[600px]">
+                <SheetContent className="w-full sm:w-[600px] sm:max-w-[600px]">
                     <SheetHeader>
                         <SheetTitle>Edit Project</SheetTitle>
                     </SheetHeader>

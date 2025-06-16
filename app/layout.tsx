@@ -29,7 +29,7 @@ export default function RootLayout({
         >
           <SharedAppProvider getStatusesPromise={getStatuses()} getPrioritiesPromise={getPriorities()}>
             <Navbar />
-            <div className="px-2">
+            <div className="px-2 overflow-auto max-h-[calc(100vh-85px)]">
               {children}
             </div>
           </SharedAppProvider>

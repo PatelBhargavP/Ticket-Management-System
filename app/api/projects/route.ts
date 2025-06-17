@@ -1,7 +1,8 @@
+import { getUserProjects } from "@/app/actions/getUserProjects";
 import dbConnect from "@/lib/db";
 import tokenParser from "@/lib/token-parser";
 import { okaResponseStatus } from "@/lib/utils";
-import { Project, IProjectDocument, IProjectDetails, IProjectMember } from "@/models/Project";
+import { Project, IProjectDocument} from "@/models/Project";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -54,11 +55,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const data = (await Project.find().populate('memberIds', ["id", "fullname", "firstname", "lastname"])).map(project => ({
-            id: project.id,
-            name: project.name,
-            members: project.memberIds
-        }));
+        const data = (await getUserProjects(token.jwt?.userId || ''));
         return NextResponse.json(data, okaResponseStatus)
 
     } catch (error) {

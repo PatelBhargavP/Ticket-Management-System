@@ -1,7 +1,6 @@
-import dbConnect from '@/lib/db';
-import { Project } from '@//models';
-import { IProjectDetails, IProjectMember } from '@/models/Project';
+import { IProjectDetails } from '@/models/Project';
 import { NextRequest, NextResponse } from 'next/server';
+import { getProjectDetails } from '@/app/actions/getprojectDetails';
 
 export async function GET(
     req: NextRequest,
@@ -21,22 +20,8 @@ export async function GET(
 
 
     try {
-        // console.log("Props of array: ", Object.keys({} as IProjectMember) as (keyof IProjectMember)[]);
-        await dbConnect();
-        const project = await Project.findOne({ identifier: identifier })
-            .populate('memberIds', ["id", "fullname", "firstname", "lastname"]).lean();
 
-        if (!project) {
-            return res.json({ message: 'Project not found' }, { status: 400 });
-        }
-        const projectRes: IProjectDetails = {
-            projectId: project.id,
-            name: project.name,
-            createdAt: project.createdAt,
-            updatedAt: project.updatedAt,
-            members: project.memberIds as unknown as IProjectMember[]
-        }
-        console.log(project, projectRes)
+        const projectRes = await getProjectDetails({ identifier: identifier });
         return res.json(projectRes, { status: 200 });
 
     } catch (error) {

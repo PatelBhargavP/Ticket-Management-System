@@ -39,6 +39,7 @@ export async function getTicketsGrouped(groupBy: GroupingType | null, projectId:
         if (!acc[key]) {
             acc[key] = {
                 data: [ticket],
+                groupId: key,
                 groupEntity: value,
                 groupType: groupBy ? groupBy : 'none'
             };

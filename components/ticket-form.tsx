@@ -51,15 +51,15 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
     const { statuses, priorities } = useSharedApp();
 
 
-    const setFormValue = (ticket: ITicketDetails | null) => {
-        form.setValue("name", ticket?.name || "");
-        form.setValue("ticketId", ticket?.ticketId || "");
-        form.setValue("description", ticket?.description || "");
-        form.setValue("projectId", ticket?.project.projectId || "");
-        form.setValue("assigneeIds", ticket?.assignee?.map(user => user.userId) || []);
-        form.setValue("statusId", ticket?.status.statusId || "");
-        form.setValue("priorityId", ticket?.priority.priorityId || "");
-    }
+    // const setFormValue = (ticket: ITicketDetails | null) => {
+    //     form.setValue("name", ticket?.name || "");
+    //     form.setValue("ticketId", ticket?.ticketId || "");
+    //     form.setValue("description", ticket?.description || "");
+    //     form.setValue("projectId", ticket?.project.projectId || "");
+    //     form.setValue("assigneeIds", ticket?.assignee?.map(user => user.userId) || []);
+    //     form.setValue("statusId", ticket?.status.statusId || "");
+    //     form.setValue("priorityId", ticket?.priority.priorityId || "");
+    // }
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {

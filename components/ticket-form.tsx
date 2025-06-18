@@ -217,11 +217,11 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
                                                 <SelectItem
                                                     key={status.statusId}
                                                     value={status.statusId}
-                                                    className="my-1"
+                                                    className="my-1 focus:ring-1"
                                                     style={{
                                                         color: status.color,
                                                         backgroundColor: `${status.color}20`, // add 20 for ~12% opacity
-                                                    }} >
+                                                    }}>
                                                     <DynamicIcon iconName={status.icon} color={status.color} /> {status.name}
                                                 </SelectItem>
                                             );
@@ -250,7 +250,7 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
                                                 <SelectItem
                                                     key={priority.priorityId}
                                                     value={priority.priorityId}
-                                                    className="my-1"
+                                                    className="my-1  focus:ring-1"
                                                     style={{
                                                         color: priority.color,
                                                         backgroundColor: `${priority.color}20`, // add 20 for ~12% opacity

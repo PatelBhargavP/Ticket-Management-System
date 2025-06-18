@@ -22,6 +22,7 @@ import { UserAvatarGroup } from "./user-avatar-group";
 import { IAppUser } from "@/models/User";
 import UserAvatar from "./user-avatar";
 import DynamicIcon from "./dynamic-icon";
+import { error } from "console";
 
 const FormSchema = z.object({
     name: z.string().min(1, {
@@ -50,16 +51,6 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
     const { ticket, projectUsers, setTransactions } = useProjectTicket();
     const { statuses, priorities } = useSharedApp();
 
-
-    const setFormValue = (ticket: ITicketDetails | null) => {
-        form.setValue("name", ticket?.name || "");
-        form.setValue("ticketId", ticket?.ticketId || "");
-        form.setValue("description", ticket?.description || "");
-        form.setValue("projectId", ticket?.project.projectId || "");
-        form.setValue("assigneeIds", ticket?.assignee?.map(user => user.userId) || []);
-        form.setValue("statusId", ticket?.status.statusId || "");
-        form.setValue("priorityId", ticket?.priority.priorityId || "");
-    }
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
@@ -72,21 +63,22 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
             priorityId: ticket?.priority.priorityId,
         },
     });
-    // useEffect(() => {
-    //     onDirtyChange(form.formState.isDirty);
-    // }, [form.formState.isDirty, onDirtyChange]);
 
     async function onSubmit(data: z.infer<typeof FormSchema>) {
-        if (!data.ticketId) {
-            await createTicket(data.projectId, data);
-        } else {
-            await updateTicket(data.ticketId, data.projectId, data);
-            setTransactions(null)
+        try {
+            if (!data.ticketId) {
+                await createTicket(data.projectId, data);
+            } else {
+                await updateTicket(data.ticketId, data.projectId, data);
+                setTransactions(null)
+            }
+            // setTicket(null);
+            onDirtyChange(false);
+            onSubmitSuccess();
+            router.refresh();
+        } catch(err) {
+            console.error(err);
         }
-        // setTicket(null);
-        onDirtyChange(false);
-        onSubmitSuccess();
-        router.refresh();
     }
 
     const getStatusTrigger = (statusId: string) => {

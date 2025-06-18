@@ -1,4 +1,4 @@
-import { getTicketsGrouped } from "@/app/actions/getGroupedTicketsForUser";
+import { getUserProjectTickets } from "@/app/actions/getUserProjectTickets";
 import { authOptions } from "@/auth";
 import KanbanSkeleton from "@/components/kanban-skeleton";
 import ProjectTicketLayout from "@/components/project-ticket-layout";
@@ -14,7 +14,7 @@ export default async function TicketBoardPage({params}: {params: Promise<{ ident
   )
   const projectIdentifier = (await params).identifier;
   const projectDetails = await projectByIdentifierCache(projectIdentifier)();
-  const projectTicketist = getTicketsGrouped('status', projectDetails.projectId);
+  const projectTicketist = getUserProjectTickets(projectDetails.projectId);
 
   return (
     <>

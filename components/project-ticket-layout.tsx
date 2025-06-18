@@ -30,7 +30,7 @@ export default function ProjectTicketLayout(
         contentType
     }: {
         ticketData?: Promise<PaginatedData<ITicketDetails>>;
-        ticketBoardData?: Promise<{ [key: string]: GroupedData<ITicketDetails, IStatus | IPriority> }>
+        ticketBoardData?: Promise<ITicketDetails[]>
         contentType: 'list' | 'board';
     }
 ) {
@@ -122,7 +122,7 @@ export default function ProjectTicketLayout(
                     ticketData
                         ? <TicketList ticketData={ticketData} onTicketEdit={onTicketEdit} />
                         : ticketBoardData
-                            ? <TicketKanbanBoard groupedTicketsPromise={ticketBoardData} onTicketEdit={onTicketEdit} />
+                            ? <TicketKanbanBoard getUerProjectTickets={ticketBoardData} onTicketEdit={onTicketEdit} />
                             : <p>Error</p>
                 }
 

@@ -28,6 +28,7 @@ export interface PaginatedData<T> extends PaginationParams {
 export type GroupingType = 'status' | 'priority' | 'none';
 export interface GroupedData<T, E> {
   data: T[];
+  groupId: string;
   groupEntity: E;
   groupType: GroupingType;
 }

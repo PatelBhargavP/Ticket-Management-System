@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { Button } from './ui/button'
-import { Moon, Sun } from 'lucide-react'
+import { Monitor, Moon, Sun } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 
 interface ProfileDropdownProps {
@@ -33,7 +33,7 @@ export function ProfileDropdown({
 }: ProfileDropdownProps) {
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
-    const { setTheme } = useTheme();
+    const { theme, setTheme } = useTheme();
 
     useEffect(() => {
         console.log(name, avatarUrl, email)
@@ -62,23 +62,32 @@ export function ProfileDropdown({
                             <DropdownMenuSubTrigger hideChevron={true}>
                                 Set theme
                                 <DropdownMenuShortcut>
-                                    <Button variant="ghost" size="icon">
-                                        <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                                        <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                                    <Button variant="ghost" size="icon">{
+                                        theme === 'system'
+                                        ?
+                                            <Monitor className="h-[1.2rem] w-[1.2rem]" />
+                                        :
+                                        <>
+                                            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                                            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                                        </>}
                                         <span className="sr-only">Toggle theme</span>
                                     </Button>
                                 </DropdownMenuShortcut>
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                                 <DropdownMenuSubContent >
-                                    <DropdownMenuItem onClick={() => setTheme("light")}>
+                                    <DropdownMenuItem className='flex justify-between' onClick={() => setTheme("light")}>
                                         Light
+                                        <Sun className="h-[1.2rem] w-[1.2rem]" />
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setTheme("dark")}>
+                                    <DropdownMenuItem className='flex justify-between' onClick={() => setTheme("dark")}>
                                         Dark
+                                        <Moon className="h-[1.2rem] w-[1.2rem]" />
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setTheme("system")}>
+                                    <DropdownMenuItem className='flex justify-between' onClick={() => setTheme("system")}>
                                         System
+                                        <Monitor className="h-[1.2rem] w-[1.2rem]" />
                                     </DropdownMenuItem>
                                 </DropdownMenuSubContent>
                             </DropdownMenuPortal>

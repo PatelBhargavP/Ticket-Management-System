@@ -27,14 +27,16 @@ export default function ProjectTicketLayout(
     {
         ticketData,
         ticketBoardData,
+        getProjectKanbanColumnOrder,
         contentType
     }: {
         ticketData?: Promise<PaginatedData<ITicketDetails>>;
-        ticketBoardData?: Promise<ITicketDetails[]>
+        ticketBoardData?: Promise<ITicketDetails[]>;
+        getProjectKanbanColumnOrder?: Promise<string[]>;
         contentType: 'list' | 'board';
     }
 ) {
-    const { ticket, setTicket, project, projectUsers } = useProjectTicket();
+    const { ticket, setTicket, project } = useProjectTicket();
     prefetchStatusAndPriority();
     const { statuses, priorities } = useSharedApp();
     const [openSheet, setOpenSheet] = useState(false);
@@ -121,8 +123,8 @@ export default function ProjectTicketLayout(
                 {
                     ticketData
                         ? <TicketList ticketData={ticketData} onTicketEdit={onTicketEdit} />
-                        : ticketBoardData
-                            ? <TicketKanbanBoard getUerProjectTickets={ticketBoardData} onTicketEdit={onTicketEdit} />
+                        : ticketBoardData && getProjectKanbanColumnOrder
+                            ? <TicketKanbanBoard getUerProjectTickets={ticketBoardData} getProjectKanbanColumnOrder={getProjectKanbanColumnOrder} onTicketEdit={onTicketEdit} />
                             : <p>Error</p>
                 }
 

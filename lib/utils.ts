@@ -1,3 +1,4 @@
+import { GroupingType } from "@/models";
 import { IPriority, IPriorityDocument } from "@/models/Priority";
 import { IProjectBase, IProjectDetails, IProjectDocument } from "@/models/Project";
 import { IStatus, IStatusDocument } from "@/models/Status";
@@ -215,3 +216,6 @@ export function formatDate(date: Date) {
   return `${date.toLocaleTimeString()} ${monthNames[monthIndex]} ${day}, ${year}`;
 }
 
+export function getKanbanColumnOrderKey(projectId: string, groupType: GroupingType, userId: string) {
+  return `${userId}_${projectId}_${groupType}`;
+}

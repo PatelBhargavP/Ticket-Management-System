@@ -1,3 +1,4 @@
+import { getKanbanColumnOrder } from "@/app/actions/getKanbanColumnOrder";
 import { getUserProjectTickets } from "@/app/actions/getUserProjectTickets";
 import { authOptions } from "@/auth";
 import KanbanSkeleton from "@/components/kanban-skeleton";
@@ -15,6 +16,7 @@ export default async function TicketBoardPage({params}: {params: Promise<{ ident
   const projectIdentifier = (await params).identifier;
   const projectDetails = await projectByIdentifierCache(projectIdentifier)();
   const projectTicketist = getUserProjectTickets(projectDetails.projectId);
+  const getProjectKanbanColumnOrder = getKanbanColumnOrder(projectDetails.projectId, 'status');
 
   return (
     <>

@@ -29,6 +29,8 @@ import IconColorBadge from "./icon-color-badge";
 import { useProjectTicket } from "@/app/context/ProjectTicketContext";
 import { updateTicket } from "@/app/actions/updateTicket";
 import { useRouter } from "next/navigation";
+import { coordinateGetter } from "@/lib/multipleContainersKeyboardPreset";
+import { setKanbanColumnOrder } from "@/app/actions/setKanbanColumnOrder";
 
 export type IBoardColum<T> = T & {
     id: string;
@@ -36,11 +38,13 @@ export type IBoardColum<T> = T & {
 
 type Props = {
     getUerProjectTickets: Promise<ITicketDetails[]>;
+    getProjectKanbanColumnOrder: Promise<string[]>;
     onTicketEdit: (ticket: ITicketDetails) => void;
 };
 
-export default function TicketKanbanBoard({ getUerProjectTickets, onTicketEdit }: Props) {
+export default function TicketKanbanBoard({ getUerProjectTickets, getProjectKanbanColumnOrder, onTicketEdit }: Props) {
     const userProjectTicketsList = use(getUerProjectTickets);
+    const columnOrder = use(getProjectKanbanColumnOrder);
     const router = useRouter();
     const { project } = useProjectTicket();
     const { statuses, priorities } = useSharedApp();
@@ -56,9 +60,9 @@ export default function TicketKanbanBoard({ getUerProjectTickets, onTicketEdit }
     const sensors = useSensors(
         useSensor(MouseSensor),
         useSensor(TouchSensor),
-        // useSensor(KeyboardSensor, {
-        //     coordinateGetter: coordinateGetter,
-        // })
+        useSensor(KeyboardSensor, {
+            coordinateGetter: coordinateGetter,
+        })
     );
 
     if (!tickets.length) {
@@ -73,9 +77,36 @@ export default function TicketKanbanBoard({ getUerProjectTickets, onTicketEdit }
     const groupType: GroupingType = 'status';
     const [columns, setColumns] = useState<IBoardColum<IStatus | IPriority>[]>([]);
     function initializeColumns() {
-        setColumns(groupType === 'status' ? statuses.map(s => ({ ...s, id: s.statusId })) : priorities.map(s => ({ ...s, id: s.priorityId })));
+        let cols: IBoardColum<IStatus | IPriority>[] = [];
+        switch (groupType) {
+            case 'status': cols = statuses.map(s => ({ ...s, id: s.statusId })); break;
+            case 'priority': cols = statuses.map(s => ({ ...s, id: s.statusId })); break;
+        }
+        if (columnOrder.length) {
+            const tracker: { [kaet: string]: boolean } = {}
+            const newOrder: IBoardColum<IStatus | IPriority>[] = [];
+            const addedColumns = []
+            columnOrder.forEach(id => {
+                if (tracker[id]) {
+                    return;
+                }
+                const col = cols.find(c => c.id === id);
+                if (!col) {
+                    tracker[id] = true;
+                } else {
+                    newOrder.push(col);
+                }
+            });
+            if (newOrder.length < cols.length) {
+                //  new column is added
+                cols = newOrder.concat(cols.filter(c => !columnOrder.includes(c.id)));
+            } else {
+                cols = newOrder
+            }
+        }
+        setColumns(cols);
     }
-    useEffect(initializeColumns, [statuses, priorities]);
+    useEffect(initializeColumns, [statuses, priorities, columnOrder]);
 
     function ticketFilter(columnId: string, ticket: ITicketDetails, groupType: GroupingType) {
         const currentId = groupType === 'status' ? ticket.status.statusId : groupType === 'priority' ? ticket.priority.priorityId : ticket.ticketId;
@@ -249,6 +280,14 @@ export default function TicketKanbanBoard({ getUerProjectTickets, onTicketEdit }
             }
         }
     }
+    async function updateCoulumnOrder() {
+        try {
+            await setKanbanColumnOrder(project.projectId, groupType, columns.map(c => c.id), project.identifier);
+            router.refresh();
+        } catch {
+
+        }
+    }
 
     function updateTicketBasedOnGroupType(ticket: ITicketDetails, col: IBoardColum<IStatus | IPriority>) {
         switch (groupType) {
@@ -308,6 +347,7 @@ export default function TicketKanbanBoard({ getUerProjectTickets, onTicketEdit }
 
             return arrayMove(columns, activeColumnIndex, overColumnIndex);
         });
+        await updateCoulumnOrder();
 
     }
 

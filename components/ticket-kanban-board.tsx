@@ -82,7 +82,7 @@ export default function TicketKanbanBoard({ getUerProjectTickets, getProjectKanb
             case 'status': cols = statuses.map(s => ({ ...s, id: s.statusId })); break;
             case 'priority': cols = statuses.map(s => ({ ...s, id: s.statusId })); break;
         }
-        if (columnOrder.length) {
+        if (columnOrder.length && cols.length) {
             const tracker: { [kaet: string]: boolean } = {}
             const newOrder: IBoardColum<IStatus | IPriority>[] = [];
             const addedColumns = []
@@ -280,9 +280,9 @@ export default function TicketKanbanBoard({ getUerProjectTickets, getProjectKanb
             }
         }
     }
-    async function updateCoulumnOrder() {
+    async function updateCoulumnOrder(columnOrder: string[]) {
         try {
-            await setKanbanColumnOrder(project.projectId, groupType, columns.map(c => c.id), project.identifier);
+            await setKanbanColumnOrder(project.projectId, groupType, columnOrder, project.identifier);
             router.refresh();
         } catch {
 
@@ -340,14 +340,12 @@ export default function TicketKanbanBoard({ getUerProjectTickets, getProjectKanb
         const isActiveAColumn = activeData?.type === "Column";
         if (!isActiveAColumn) return;
 
-        setColumns((columns) => {
-            const activeColumnIndex = columns.findIndex((col) => col.id === activeId);
+        const activeColumnIndex = columns.findIndex((col) => col.id === activeId);
+        const overColumnIndex = columns.findIndex((col) => col.id === overId);
+        const newCols = arrayMove(columns, activeColumnIndex, overColumnIndex);
 
-            const overColumnIndex = columns.findIndex((col) => col.id === overId);
-
-            return arrayMove(columns, activeColumnIndex, overColumnIndex);
-        });
-        await updateCoulumnOrder();
+        setColumns(newCols);
+        await updateCoulumnOrder(newCols.map(c => c.id));
 
     }
 

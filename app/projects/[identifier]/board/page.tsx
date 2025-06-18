@@ -21,7 +21,7 @@ export default async function TicketBoardPage({params}: {params: Promise<{ ident
   return (
     <>
       <Suspense fallback={<KanbanSkeleton />}>
-        <ProjectTicketLayout ticketBoardData={projectTicketist} contentType="board"></ProjectTicketLayout>
+        <ProjectTicketLayout ticketBoardData={projectTicketist} getProjectKanbanColumnOrder={getProjectKanbanColumnOrder} contentType="board"></ProjectTicketLayout>
       </Suspense>
     </>
   );

@@ -9,7 +9,7 @@ import { getPriorities } from "./actions/getPriorities";
 import ContentWrapper from "@/components/content-wrapper";
 
 export const metadata: Metadata = {
-  title: "Ticket management system",
+  title: "TicketFlow",
   description: "For managing internal projects",
 };
 

@@ -40,7 +40,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
 export async function generateMetadata() {
 
   return {
-    title: `Login - Ticket Menagement System`,
+    title: `Login - TicketFlow`,
     description: `Login using your infocusp email.`,
   };
 }

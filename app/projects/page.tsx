@@ -28,7 +28,7 @@ export default async function Projects() {
 export async function generateMetadata() {
 
   return {
-    title: `Projects list - Ticket Menagement System`,
+    title: `Projects list - TicketFlow`,
     description: `This page lists all the Project`,
   };
 }

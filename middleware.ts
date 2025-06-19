@@ -19,7 +19,7 @@ export default withAuth(
             authorized({ req, token }) {
                 // `/admin` requires admin role
                 // console.log('authorized: ', req, token)
-                if (req.nextUrl.pathname === "/login") {
+                if (req.nextUrl.pathname === "/login" || req.nextUrl.pathname.startsWith("/avatars")) {
                     return true
                 }
                 // `/me` only requires the user to be logged in

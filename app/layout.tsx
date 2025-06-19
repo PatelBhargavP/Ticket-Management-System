@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { SharedAppProvider } from "@/app/context/SharedAppContext";
 import { getStatuses } from "./actions/getStatuses";
 import { getPriorities } from "./actions/getPriorities";
+import ContentWrapper from "@/components/content-wrapper";
 
 export const metadata: Metadata = {
   title: "Ticket management system",
@@ -29,9 +30,9 @@ export default function RootLayout({
         >
           <SharedAppProvider getStatusesPromise={getStatuses()} getPrioritiesPromise={getPriorities()}>
             <Navbar />
-            <div className="px-2 overflow-auto max-h-[calc(100vh-85px)]">
+            <ContentWrapper>
               {children}
-            </div>
+            </ContentWrapper>
           </SharedAppProvider>
         </ThemeProviderWrapper>
       </body>

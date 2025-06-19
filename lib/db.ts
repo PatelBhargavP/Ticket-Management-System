@@ -19,15 +19,20 @@ async function dbConnect() {
   }
 
   if (cached.conn) {
+    await cached.conn.connection.db.admin().command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
     return cached.conn;
   }
   if (!cached.promise) {
+
+
     const opts = {
       bufferCommands: false,
     };
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
       return mongoose;
     });
+    
   }
   try {
     cached.conn = await cached.promise;

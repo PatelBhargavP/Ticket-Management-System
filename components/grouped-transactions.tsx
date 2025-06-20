@@ -6,6 +6,7 @@ import { ITransactionDetails } from '@/models/Transaction';
 import { useEffect, useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import TransactionDetailsComponent from './transaction-details-component';
+import { GroupedTransactionsSkeleton } from './grouped-transaction-skeleton';
 
 export default function GroupedTransactions() {
 
@@ -37,7 +38,7 @@ export default function GroupedTransactions() {
     }, [ticket?.ticketId]);
 
     if (loading) {
-        return <div>Loading transaction...</div>
+        return <GroupedTransactionsSkeleton />
     } else if (transactions) {
         groupedTransactions = groupTransactionsByTimeRange(transactions);
     }

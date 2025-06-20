@@ -1,12 +1,12 @@
-import mongoose from "mongoose";
+import mongoose, { Mongoose } from "mongoose";
 declare global {
   var mongoose: any; // This must be a `var` and not a `let / const`
 }
 
-let cached = global.mongoose;
+let cached: { conn?: mongoose.Mongoose, promise?: Promise<mongoose.Mongoose> } = global.mongoose;
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = global.mongoose = { conn: undefined, promise: undefined };
 }
 
 async function dbConnect() {
@@ -19,8 +19,6 @@ async function dbConnect() {
   }
 
   if (cached.conn) {
-    await cached.conn.connection.db.admin().command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
     return cached.conn;
   }
   if (!cached.promise) {
@@ -30,14 +28,19 @@ async function dbConnect() {
       bufferCommands: false,
     };
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      console.log("created connections to mongoDB.", mongoose.connections.length);
       return mongoose;
     });
-    
+
   }
   try {
     cached.conn = await cached.promise;
+    if (cached.conn?.connection.db) {
+      await cached.conn.connection.db.admin().command({ ping: 1 });
+      console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    }
   } catch (e) {
-    cached.promise = null;
+    cached.promise = undefined;
     throw e;
   }
 

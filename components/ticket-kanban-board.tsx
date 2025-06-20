@@ -46,7 +46,7 @@ export default function TicketKanbanBoard({ getUerProjectTickets, getProjectKanb
     const userProjectTicketsList = use(getUerProjectTickets);
     const columnOrder = use(getProjectKanbanColumnOrder);
     const router = useRouter();
-    const { project } = useProjectTicket();
+    const { project, setTransactions } = useProjectTicket();
     const { statuses, priorities } = useSharedApp();
 
     const pickedUpTicketColumn = useRef<string | null>(null);
@@ -273,6 +273,7 @@ export default function TicketKanbanBoard({ getUerProjectTickets, getProjectKanb
         if (oldTicket?.status.statusId !== ticket.status.statusId || oldTicket?.priority.priorityId !== ticket.priority.priorityId) {
             try {
                 await updateTicket(ticket.ticketId, project.projectId, payload);
+                setTransactions(null);
                 router.refresh();
             } catch {
                 // reset the updated value;

@@ -7,6 +7,6 @@ logs
 .DS_Store
 .idea
 .next
-.env
+.env*
 yarn-error.log
 npm-debug.log

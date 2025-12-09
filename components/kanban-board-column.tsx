@@ -73,7 +73,7 @@ export default function KanbanBoardColumn({
         {
             variants: {
                 dragging: {
-                    default: "border-1 border-transparent",
+                    default: "border border-transparent",
                     over: "ring-1 opacity-30",
                     overlay: "ring-1 ring-primary",
                 },

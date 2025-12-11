@@ -14,8 +14,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
-import { createTicket } from "@/app/actions/createTicket";
-import { updateTicket } from "@/app/actions/updateTicket";
 import { useRouter } from "next/navigation";
 import { UserAvatarGroup } from "./user-avatar-group";
 import { IAppUser } from "@/models/User";
@@ -65,9 +63,31 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
     async function onSubmit(data: z.infer<typeof FormSchema>) {
         try {
             if (!data.ticketId) {
-                await createTicket(data.projectId, data);
+                const response = await fetch('/api/ticket/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to create ticket');
+                }
             } else {
-                await updateTicket(data.ticketId, data.projectId, data);
+                const response = await fetch('/api/ticket/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to update ticket');
+                }
                 setTransactions(null)
             }
             // setTicket(null);

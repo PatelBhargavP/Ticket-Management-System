@@ -15,18 +15,16 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     try {
-        let project: IProjectDocument | null;
         const data = await request.json();
         console.log("create/update project request", data)
         if (data.id) {
-            project = await Project.findById(data.id);
+            const project = await Project.findById(data.id).lean<IProjectDocument>();
             if (!project) {
                 return NextResponse.json({ error: 'Could not find project' }, { status: 404 });
             } else {
                 const resData = await Project.findOneAndUpdate({ projectId: project.id }, data, {
                     new: true
-                })
-                project = await Project.findById(project._id);
+                }).lean<IProjectDocument>();
                 return NextResponse.json(resData, okaResponseStatus)
             }
 
@@ -34,9 +32,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Cannot create project without name' }, { status: 400 });
         } else {
             data['memberIds'] = [token.jwt?.userId];
-            project = await Project.create(data);
-            project = await Project.findById(project._id);
-            return NextResponse.json(project, okaResponseStatus)
+            const createdProject = await Project.create(data);
+            // Project.create returns a Document, access _id property directly
+            const projectId = (createdProject as any)._id;
+            const populatedProject = await Project.findById(projectId).lean<IProjectDocument>();
+            if (!populatedProject) {
+                return NextResponse.json({ error: 'Failed to fetch created project' }, { status: 500 });
+            }
+            return NextResponse.json(populatedProject, okaResponseStatus)
         }
 
     } catch (error) {

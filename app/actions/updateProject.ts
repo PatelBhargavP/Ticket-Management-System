@@ -20,7 +20,7 @@ export async function updateProject(projectId: string, data: Partial<IProjectDoc
             throw new Error('Cannot find project without id');
         }
 
-        const project = await Project.findById(projectId);
+        const project = await Project.findOne({ projectId: projectId });
         if (!project) {
             throw new Error('Could not find project with ID ' + projectId);
         }
@@ -33,9 +33,9 @@ export async function updateProject(projectId: string, data: Partial<IProjectDoc
             payload.memberIds = data.memberIds;
         }
 
-        await Project.updateOne({ id: projectId }, { $set: { ...payload, updatedById: session.userId } });
+        await Project.updateOne({ projectId: projectId }, { $set: { ...payload, updatedById: session.userId } });
         
-        const updatedProjectDoc = await Project.findOne({ id: projectId })
+        const updatedProjectDoc = await Project.findOne({ projectId: projectId })
             .populate('memberIds', appUserAttributes)
             .populate('updatedById', appUserAttributes)
             .populate('createdById', appUserAttributes)

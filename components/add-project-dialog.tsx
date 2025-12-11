@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createProject } from "@/app/actions/createProject";
 import { useRouter } from "next/navigation";
 
 interface AddProjectDialogProps {
@@ -25,7 +24,20 @@ export default function AddProjectDialog({ open, onClose, onAdd }: AddProjectDia
     setLoading(true);
 
     try {
-      const res = await createProject({ name });
+      const response = await fetch('/api/project/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create project');
+      }
+
+      const res = await response.json();
       router.refresh();
 
       if (res) {
@@ -34,6 +46,7 @@ export default function AddProjectDialog({ open, onClose, onAdd }: AddProjectDia
         onClose();
       }
     } catch (err: any) {
+      console.error('Error creating project:', err);
     } finally {
       setLoading(false);
     }

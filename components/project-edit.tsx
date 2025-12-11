@@ -8,7 +8,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { IAppUser } from "@/models/User";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "./ui/input";
-import { updateProject } from "@/app/actions/updateProject";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import UserAvatar from "./user-avatar";
@@ -17,8 +16,26 @@ export default function ProjectEdit({ project, users }: { project: IProjectDetai
     const router = useRouter();
     const [name, setName] = useState(project.name);
     const handleEdit = async (payload: Partial<IProjectDocument>) => {
-        await updateProject(project.projectId, payload);
-        router.refresh();
+        try {
+            const response = await fetch('/api/project/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    projectId: project.projectId,
+                    ...payload,
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to update project');
+            }
+            router.refresh();
+        } catch (error) {
+            console.error('Error updating project:', error);
+        }
     };
 
     const removeMember = async (userId: string) => {

@@ -27,10 +27,8 @@ import { createPortal } from "react-dom";
 import KanbanBoardCard from "./kanban-board-card";
 import IconColorBadge from "./icon-color-badge";
 import { useProjectTicket } from "@/app/context/ProjectTicketContext";
-import { updateTicket } from "@/app/actions/updateTicket";
 import { useRouter } from "next/navigation";
 import { coordinateGetter } from "@/lib/multipleContainersKeyboardPreset";
-import { setKanbanColumnOrder } from "@/app/actions/setKanbanColumnOrder";
 
 export type IBoardColum<T> = T & {
     id: string;
@@ -272,7 +270,22 @@ export default function TicketKanbanBoard({ getUerProjectTickets, getProjectKanb
         }
         if (oldTicket?.status.statusId !== ticket.status.statusId || oldTicket?.priority.priorityId !== ticket.priority.priorityId) {
             try {
-                await updateTicket(ticket.ticketId, project.projectId, payload);
+                const response = await fetch('/api/ticket/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ticketId: ticket.ticketId,
+                        projectId: project.projectId,
+                        ...payload,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to update ticket');
+                }
                 setTransactions(null);
                 router.refresh();
             } catch {
@@ -283,7 +296,23 @@ export default function TicketKanbanBoard({ getUerProjectTickets, getProjectKanb
     }
     async function updateCoulumnOrder(columnOrder: string[]) {
         try {
-            await setKanbanColumnOrder(project.projectId, groupType, columnOrder, project.identifier);
+            const response = await fetch('/api/kanban/column-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    projectId: project.projectId,
+                    groupType: groupType,
+                    columns: columnOrder,
+                    projectIdentifier: project.identifier,
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to update column order');
+            }
             router.refresh();
         } catch {
 

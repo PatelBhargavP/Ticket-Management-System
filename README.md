@@ -26,7 +26,7 @@ A full-featured ticket management system built using **Next.js (App Router)**, *
 ├── lib/ # temp data, utility function, DB connection utils  
 │ ├── utils.ts # Helper functions  
 ├── models/ # Mongoose models  
-├── proxy.ts #For auth check and route protection  
+├── proxy.ts #For auth check and route protection (Next.js 16 proxy middleware)  
 ├── components/ # UI components  
 └── ...
 
@@ -72,7 +72,9 @@ cd Ticket-Management-System
 npm install
 ```
 
-### 3. Set up `.env.local`
+### 3. Set up `.env`
+
+Create a `.env` file in the root directory with the following variables:
 
 ```bash
 MONGODB_URI=<your-mongodb-uri>
@@ -80,6 +82,8 @@ NEXTAUTH_SECRET=<your-secret>
 GOOGLE_CLIENT_ID=<your-client-id>
 GOOGLE_CLIENT_SECRET=<your-client-secret>
 ```
+
+**Note:** The project is configured to load environment variables from `.env` file. If you have a `.env.local` file, ensure your `.env` file contains the values you want to use, as `.env.local` takes precedence in Next.js by default.
 
 ### 4. Getting Started
 
@@ -99,6 +103,260 @@ You can start editing the page by modifying `...files`. The page auto-updates as
 - /projects - List all projects
 - /projects/[`project_identifier`]/list - List view of project tickets
 - /projects/[`project_identifier`]/board - Kanban board view
+
+## 🔌 API Routes
+
+All API routes require authentication via NextAuth session token. The authentication is handled automatically through cookies for browser requests, or you can pass the session token in the request headers.
+
+### Authentication
+
+**Endpoint:** `/api/auth/[...nextauth]`  
+**Methods:** `GET`, `POST`  
+**Description:** NextAuth.js authentication routes for handling Google OAuth login, session management, and callbacks.
+
+---
+
+### Tickets
+
+#### Create Ticket
+
+**Endpoint:** `POST /api/ticket/create`  
+**Authentication:** Required  
+**Request Body:**
+```json
+{
+  "projectId": "string (required)",
+  "name": "string (required)",
+  "description": "string (optional)",
+  "assigneeIds": ["string[] (optional)"],
+  "statusId": "string (optional)",
+  "priorityId": "string (optional)"
+}
+```
+**Response:** `200 OK`
+```json
+{
+  "ticketId": "string",
+  "name": "string",
+  "description": "string",
+  "project": { "projectId": "string", "name": "string", "identifier": "string" },
+  "assignee": [{ "userId": "string", "fullname": "string", ... }],
+  "status": { "statusId": "string", "name": "string", ... },
+  "priority": { "priorityId": "string", "name": "string", ... },
+  "createdAt": "string",
+  "updatedAt": "string",
+  "createdBy": { "userId": "string", ... },
+  "updatedBy": { "userId": "string", ... }
+}
+```
+**Error Responses:**
+- `400` - Project ID is required
+- `401` - Unauthorized
+- `500` - Failed to create ticket
+
+#### Update Ticket
+
+**Endpoint:** `POST /api/ticket/update`  
+**Authentication:** Required  
+**Request Body:**
+```json
+{
+  "ticketId": "string (required)",
+  "projectId": "string (required)",
+  "name": "string (optional)",
+  "description": "string (optional)",
+  "assigneeIds": ["string[] (optional)"],
+  "statusId": "string (optional)",
+  "priorityId": "string (optional)"
+}
+```
+**Response:** `200 OK` - Returns updated ticket details (same structure as create ticket)  
+**Error Responses:**
+- `400` - Ticket ID or Project ID is required
+- `401` - Unauthorized
+- `500` - Failed to update ticket
+
+---
+
+### Projects
+
+#### Create Project
+
+**Endpoint:** `POST /api/project/create`  
+**Authentication:** Required  
+**Request Body:**
+```json
+{
+  "name": "string (required)",
+  "identifier": "string (optional)",
+  "memberIds": ["string[] (optional)"]
+}
+```
+**Response:** `200 OK`
+```json
+{
+  "projectId": "string",
+  "name": "string",
+  "identifier": "string",
+  "members": [{ "userId": "string", "fullname": "string", ... }],
+  "createdAt": "string",
+  "updatedAt": "string",
+  "createdBy": { "userId": "string", ... },
+  "updatedBy": { "userId": "string", ... }
+}
+```
+**Error Responses:**
+- `400` - Cannot create project without name
+- `401` - Unauthorized
+- `500` - Failed to create project
+
+#### Update Project
+
+**Endpoint:** `POST /api/project/update`  
+**Authentication:** Required  
+**Request Body:**
+```json
+{
+  "projectId": "string (required)",
+  "name": "string (optional)",
+  "memberIds": ["string[] (optional)"]
+}
+```
+**Response:** `200 OK` - Returns updated project details (same structure as create project)  
+**Error Responses:**
+- `400` - Project ID is required
+- `401` - Unauthorized
+- `500` - Failed to update project
+
+#### Get User Projects
+
+**Endpoint:** `GET /api/projects`  
+**Authentication:** Required  
+**Query Parameters:** None  
+**Response:** `200 OK`
+```json
+[
+  {
+    "projectId": "string",
+    "name": "string",
+    "identifier": "string",
+    "members": [{ "userId": "string", ... }],
+    "createdAt": "string",
+    "updatedAt": "string"
+  }
+]
+```
+**Error Responses:**
+- `401` - Unauthorized
+- `500` - Failed to process request
+
+#### Get Project by Identifier
+
+**Endpoint:** `GET /api/project/identifier/[identifier]`  
+**Authentication:** Not required (public endpoint)  
+**Path Parameters:**
+- `identifier` - Project identifier string  
+**Response:** `200 OK`
+```json
+{
+  "projectId": "string",
+  "name": "string",
+  "identifier": "string",
+  "members": [{ "userId": "string", ... }],
+  "createdAt": "string",
+  "updatedAt": "string"
+}
+```
+**Error Responses:**
+- `400` - Project identifier is required
+- `500` - Internal server error
+
+**Note:** Legacy endpoint `/api/projects` with `POST` method also supports create/update operations but is deprecated in favor of dedicated `/api/project/create` and `/api/project/update` endpoints.
+
+---
+
+### Kanban Board
+
+#### Set Kanban Column Order
+
+**Endpoint:** `POST /api/kanban/column-order`  
+**Authentication:** Required  
+**Request Body:**
+```json
+{
+  "projectId": "string (required)",
+  "groupType": "string (required)", // 'status' or 'priority'
+  "columns": ["string[] (required)"], // Array of column IDs in desired order
+  "projectIdentifier": "string (optional)"
+}
+```
+**Response:** `200 OK`
+```json
+{
+  "identifier": "string",
+  "entityOrder": ["string"]
+}
+```
+**Error Responses:**
+- `400` - Project ID, group type, or columns array is required
+- `401` - Unauthorized
+- `500` - Failed to set kanban column order
+
+---
+
+### Users
+
+#### Get All Users
+
+**Endpoint:** `GET /api/users`  
+**Authentication:** Required  
+**Query Parameters:** None  
+**Response:** `200 OK`
+```json
+[
+  {
+    "userId": "string",
+    "email": "string",
+    "fullname": "string",
+    "firstname": "string",
+    "lastname": "string",
+    "image": "string"
+  }
+]
+```
+**Error Responses:**
+- `401` - Unauthorized
+- `500` - Failed to process request
+
+---
+
+### Transactions (Audit Trail)
+
+#### Get Transactions for Entity
+
+**Endpoint:** `GET /api/transactions/[entityId]`  
+**Authentication:** Required  
+**Path Parameters:**
+- `entityId` - Entity ID (e.g., ticket ID)  
+**Response:** `200 OK`
+```json
+[
+  {
+    "transactionId": "string",
+    "transactionType": "string", // 'create' or 'update'
+    "entityType": "string", // 'Ticket', 'Project', etc.
+    "entityId": "string",
+    "userId": "string",
+    "fields": {},
+    "createdAt": "string"
+  }
+]
+```
+**Error Responses:**
+- `401` - Unauthorized
+- `500` - Failed to process request
+
+---
 
 ## ⚠️ Things to Consider in Next.js
 
@@ -154,7 +412,7 @@ export async function getProjectBySlug(slug: string) {
 ### 🔒 4. Authentication & Session Handling
 
 - Use getSession or useSession from next-auth/react.
-- Use proxy to check for the authentication for pages configured in `config` object.
+- Use proxy (middleware) to check for the authentication for pages configured in `config` matcher. The proxy runs before requests are completed and can redirect or modify responses. Note: Next.js 16 uses "proxy" file convention instead of "middleware".
 - We are using `getServerSession` with `authOptions` to get access to user details in server components or functions.
 
 ### 💅 5. UI Responsiveness and Accessibility

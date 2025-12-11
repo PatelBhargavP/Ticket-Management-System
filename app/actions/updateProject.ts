@@ -11,40 +11,53 @@ export async function updateProject(projectId: string, data: Partial<IProjectDoc
     try {
         await dbConnect();
         const session = await getServerSession(authOptions);
-        let project: IProjectDocument | null;
+
+        if (!session?.userId) {
+            throw new Error('User must be authenticated to update projects');
+        }
+
         if (!projectId) {
-            throw Error('Cannot find project without id');
+            throw new Error('Cannot find project without id');
         }
-        project = await Project.findById(projectId);
+
+        const project = await Project.findById(projectId);
         if (!project) {
-            throw Error('Could not find project with ID ' + projectId);
-        } else {
-            const payload: Partial<IProjectDocument> = {};
-            if (data.name) {
-                payload.name = data.name
-            }
-            if (data.memberIds) {
-                payload.memberIds = data.memberIds
-            }
-            await Project.updateOne({ _id: projectId }, { $set: { ...payload, updatedById: session?.userId, createdById: session?.userId } });
-            const p = await Project.findOne({ _id: projectId })
-                .populate('memberIds', appUserAttributes)
-                .populate('updatedById', appUserAttributes)
-                .populate('createdById', appUserAttributes)
-                .lean<IProjectDocument>();
-            if (!p) {
-                return castProjectDocumentToDetails(project);
-            }
-            const updatedProject = castProjectDocumentToDetails(p);
-            revalidateTag(`projectIdentifier:${updatedProject.identifier}`);
-            revalidatePath('/projects');
-            return updatedProject;
+            throw new Error('Could not find project with ID ' + projectId);
         }
+
+        const payload: Partial<IProjectDocument> = {};
+        if (data.name) {
+            payload.name = data.name;
+        }
+        if (data.memberIds) {
+            payload.memberIds = data.memberIds;
+        }
+
+        await Project.updateOne({ id: projectId }, { $set: { ...payload, updatedById: session.userId } });
+        
+        const updatedProjectDoc = await Project.findOne({ id: projectId })
+            .populate('memberIds', appUserAttributes)
+            .populate('updatedById', appUserAttributes)
+            .populate('createdById', appUserAttributes)
+            .lean<IProjectDocument>();
+
+        if (!updatedProjectDoc) {
+            throw new Error('Failed to fetch updated project');
+        }
+
+        const updatedProject = castProjectDocumentToDetails(updatedProjectDoc);
+
+        // Revalidate paths only if identifier is available
+        if (updatedProject.identifier) {
+            revalidateTag(`projectIdentifier:${updatedProject.identifier}`, 'max');
+        }
+        revalidatePath('/projects');
+
+        return updatedProject;
     } catch (error) {
         if (error instanceof Error) {
-            throw new Error(`Failed to update project: ${error.message}`)
-        } else {
-            throw new Error('Unknown error occurred during project update')
+            throw new Error(`Failed to update project: ${error.message}`);
         }
+        throw new Error('Unknown error occurred during project update');
     }
 }

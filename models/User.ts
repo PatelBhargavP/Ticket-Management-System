@@ -65,10 +65,10 @@ UserSchema.set('toJSON', {
   }
 });
 
-UserSchema.pre('save', async function (next) {
+UserSchema.pre('save', async function () {
     const doc = this;
-    doc.userId = this.id;
-    next();
+    // Use _id.toString() since id is a virtual property that may not be available during pre-save
+    doc.userId = this._id.toString();
 })
 
 // const AppUser : Model<IAppUserDocument> = process.env.NODE_ENV === 'development'

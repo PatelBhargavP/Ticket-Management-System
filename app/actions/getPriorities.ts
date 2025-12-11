@@ -7,7 +7,7 @@ import { IPriorityDocument, Priority } from "@/models/Priority";
 export async function getPriorities() {
   try {
     await dbConnect();
-    const priorities = await Priority.find().lean<IPriorityDocument[]>().exec();
+    const priorities = await (await Priority.find().lean<IPriorityDocument[]>());
     return priorities.map(priority => castPriorityDocumentToDetails(priority));
   } catch (error) {
     console.error('Error fetching priority list:', error);

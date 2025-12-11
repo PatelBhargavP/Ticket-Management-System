@@ -26,7 +26,7 @@ A full-featured ticket management system built using **Next.js (App Router)**, *
 ├── lib/ # temp data, utility function, DB connection utils  
 │ ├── utils.ts # Helper functions  
 ├── models/ # Mongoose models  
-├── middleware.ts #For auth check and route protection  
+├── proxy.ts #For auth check and route protection  
 ├── components/ # UI components  
 └── ...
 
@@ -154,7 +154,7 @@ export async function getProjectBySlug(slug: string) {
 ### 🔒 4. Authentication & Session Handling
 
 - Use getSession or useSession from next-auth/react.
-- Use middleware to check for the authentication for pages configured in `config` object.
+- Use proxy to check for the authentication for pages configured in `config` object.
 - We are using `getServerSession` with `authOptions` to get access to user details in server components or functions.
 
 ### 💅 5. UI Responsiveness and Accessibility

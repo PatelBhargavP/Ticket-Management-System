@@ -4,7 +4,7 @@ import dbConnect from '@/lib/db'
 import { appUserAttributes, castTicketDocumentToDetails, priorityAttributes, projectBaseAttributes, statusAttributes } from '@/lib/utils'
 import { PaginatedData, PaginationParams, Ticket } from '@/models'
 import { ITicketDetails, ITicketDocument } from '@/models/Ticket'
-import { FilterQuery } from 'mongoose'
+import { QueryFilter } from 'mongoose'
 
 
 const defaultParams: PaginationParams = {
@@ -13,7 +13,7 @@ const defaultParams: PaginationParams = {
   sortBy: 'createdAt',
   sortOrder: 'desc'
 }
-export async function getPaginatedProjectTickets(projectId: string, filter: FilterQuery<ITicketDocument>, params: Partial<PaginationParams> = defaultParams) {
+export async function getPaginatedProjectTickets(projectId: string, filter: QueryFilter<ITicketDocument>, params: Partial<PaginationParams> = defaultParams) {
   await dbConnect()
   const pageParams = {
     ...defaultParams,
@@ -27,7 +27,7 @@ export async function getPaginatedProjectTickets(projectId: string, filter: Filt
   }
 
   const [totalRecords, ticket] = await Promise.all([
-    Ticket.find(filter).countDocuments(),
+    Ticket.countDocuments(filter),
     Ticket.find(filter)
       .sort(sortOptions)
       .skip(skip)

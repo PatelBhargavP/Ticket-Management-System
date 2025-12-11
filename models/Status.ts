@@ -66,10 +66,10 @@ StatusSchema.set('toJSON', {
   }
 });
 
-StatusSchema.pre('save', async function (next) {
+StatusSchema.pre('save', async function () {
     const doc = this;
-    doc.statusId = this.id;
-    next();
+    // Use _id.toString() since id is a virtual property that may not be available during pre-save
+    doc.statusId = this._id.toString();
 })
 
 export const Status : Model<IStatusDocument> = mongoose.models?.Status || mongoose.model('Status', StatusSchema);

@@ -8,10 +8,10 @@ import { authOptions } from '@/auth'
 
 export default async function Projects() {
   const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   return <div>User not logged in.</div>
-  // }
-  const projectsPromise = getUserProjects('bhargavkumar@infocusp.com');
+  if (!session) {
+    return <div>User not logged in.</div>
+  }
+  const projectsPromise = getUserProjects(session?.userId);
   const usersPromise = getAppUsers();
 
   return (

@@ -12,7 +12,7 @@ export async function getKanbanColumnOrder(projectId: string, groupType: Groupin
         throw 'Cannot perform get operation since user is not logged in';
     }
     const key = getKanbanColumnOrderKey(projectId, groupType, session.userId);
-    const order = (await KanbanColumnOrder.findOne({ identifier: key }).lean<IKanbanColumnOrder>());
+    const order = await (await KanbanColumnOrder.findOne({ identifier: key }).lean<IKanbanColumnOrder>());
 
     return order?.entityOrder || [];
 }

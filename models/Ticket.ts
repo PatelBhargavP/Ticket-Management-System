@@ -116,9 +116,10 @@ TicketSchema.set('toJSON', {
 });
 
 
-TicketSchema.pre('save', async function (next) {
+TicketSchema.pre('save', async function () {
     const doc = this;
-    doc.ticketId = this.id;
+    // Use _id.toString() since id is a virtual property that may not be available during pre-save
+    doc.ticketId = this._id.toString();
     // console.log("pre save function: ", doc);
     if (!doc.identifier) {
         let randomString = '';
@@ -150,7 +151,6 @@ TicketSchema.pre('save', async function (next) {
         while (!isUnique)
         doc.identifier = randomString.toLocaleUpperCase();
     }
-    next();
 });
 
 export const Ticket: Model<ITicketDocument> = mongoose.models?.Ticket || mongoose.model('Ticket', TicketSchema);

@@ -9,7 +9,7 @@ import { IAppUserDocument } from "@/models/User";
 export async function getStatuses() {
   try {
     await dbConnect();
-    const statuses = await Status.find().lean<IStatusDocument[]>().exec();
+    const statuses = await (await Status.find().lean<IStatusDocument[]>());
     return statuses.map(status => castStatusDocumentToDetails(status));
   } catch (error) {
     console.error('Error fetching status list:', error);

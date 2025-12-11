@@ -160,7 +160,6 @@ export function diffObjects<T extends Record<string, any>>(obj1: T, obj2: T): IT
 }
 
 export function differenceForTicket(previousVal: ITicketDocument, update: ITicketDocument) {
-  console.log('diff FN', previousVal, update)
   const diff = diffObjects({
     name: previousVal.name,
     description: previousVal.description,

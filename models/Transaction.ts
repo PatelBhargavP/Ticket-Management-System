@@ -115,11 +115,11 @@ TransactionSchema.set('toJSON', {
 });
 
 
-TransactionSchema.pre('save', async function (next) {
+TransactionSchema.pre('save', async function () {
     const doc = this;
-    doc.transactionId = this.id;
+    // Use _id.toString() since id is a virtual property that may not be available during pre-save
+    doc.transactionId = this._id.toString();
     console.log("pre save function: ", doc);
-    next();
 });
 
 export const Transaction: Model<ITransactionDocument> = mongoose.models?.Transaction || mongoose.model('Transaction', TransactionSchema);

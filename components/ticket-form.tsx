@@ -1,4 +1,4 @@
-"use-client";
+"use client";
 
 import { useProjectTicket } from "@/app/context/ProjectTicketContext";
 import { useForm } from "react-hook-form";
@@ -16,13 +16,11 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
 import { createTicket } from "@/app/actions/createTicket";
 import { updateTicket } from "@/app/actions/updateTicket";
-import { ITicketDetails } from "@/models/Ticket";
 import { useRouter } from "next/navigation";
 import { UserAvatarGroup } from "./user-avatar-group";
 import { IAppUser } from "@/models/User";
 import UserAvatar from "./user-avatar";
 import DynamicIcon from "./dynamic-icon";
-import { error } from "console";
 
 const FormSchema = z.object({
     name: z.string().min(1, {

@@ -61,10 +61,10 @@ PrioritySchema.set('toJSON', {
   }
 });
 
-PrioritySchema.pre('save', async function (next) {
+PrioritySchema.pre('save', async function () {
     const doc = this;
-    doc.priorityId = this.id;
-    next();
+    // Use _id.toString() since id is a virtual property that may not be available during pre-save
+    doc.priorityId = this._id.toString();
 })
 
 export const Priority : Model<IPriorityDocument> = mongoose.models?.Priority || mongoose.model('Priority', PrioritySchema);

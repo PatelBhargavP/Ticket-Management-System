@@ -4,9 +4,9 @@ import dbConnect from "@/lib/db";
 import { appUserAttributes, castProjectDocumentToDetails } from "@/lib/utils";
 import { Project } from "@/models";
 import { IProjectDocument } from "@/models/Project";
-import { FilterQuery } from "mongoose";
+import { QueryFilter } from "mongoose";
 
-export async function getProjectDetails(filter: FilterQuery<IProjectDocument>) {
+export async function getProjectDetails(filter: QueryFilter<IProjectDocument>) {
     try {
         await dbConnect();
         const project = await Project.findOne(filter)

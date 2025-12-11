@@ -82,7 +82,7 @@ ProjectSchema.set('toJSON', {
     }
 });
 
-ProjectSchema.pre('save', async function (next) {
+ProjectSchema.pre('save', async function () {
     const doc = this;
     doc.projectId = this._id.toString();
     if (!doc.identifier) {
@@ -115,7 +115,6 @@ ProjectSchema.pre('save', async function (next) {
         while (!isUnique)
         doc.identifier = randomString.toLocaleUpperCase();
     }
-    next();
 });
 
 export const Project: Model<IProjectDocument> = mongoose.models?.Project || mongoose.model('Project', ProjectSchema);

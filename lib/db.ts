@@ -1,50 +1,56 @@
-import mongoose, { Mongoose } from "mongoose";
+import mongoose from "mongoose";
+
 declare global {
-  var mongoose: any; // This must be a `var` and not a `let / const`
+  // This must be a `var` so it persists across module reloads in Next.js
+  var mongoose: any;
 }
 
-let cached: { conn?: mongoose.Mongoose, promise?: Promise<mongoose.Mongoose> } = global.mongoose;
+type MongooseType = typeof mongoose;
 
-if (!cached) {
-  cached = global.mongoose = { conn: undefined, promise: undefined };
-}
+let cached: { conn?: MongooseType | null; promise?: Promise<MongooseType> | null } =
+  global.mongoose || { conn: null, promise: null };
 
-async function dbConnect() {
-  const MONGODB_URI = process.env.MONGODB_URI!;
-
+async function dbConnect(): Promise<MongooseType> {
+  // mongoose.set('debug', true);
+  const MONGODB_URI = process.env.MONGODB_URI;
   if (!MONGODB_URI) {
     throw new Error(
-      "Please define the MONGODB_URI environment variable inside .env.local",
+      "Please define the MONGODB_URI environment variable inside .env.local"
     );
   }
 
   if (cached.conn) {
     return cached.conn;
   }
+
   if (!cached.promise) {
-
-
-    const opts = {
-      bufferCommands: false,
+    const opts: mongoose.ConnectOptions = {
+      bufferCommands: false, // prevent mongoose from buffering operations while disconnected
     };
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      console.log("created connections to mongoDB.", mongoose.connections.length);
-      return mongoose;
-    });
 
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
+      console.log("created connections to mongoDB.", m.connections.length);
+      return m;
+    });
   }
+
   try {
     cached.conn = await cached.promise;
     if (cached.conn?.connection.db) {
       await cached.conn.connection.db.admin().command({ ping: 1 });
-      console.log("Pinged your deployment. You successfully connected to MongoDB!");
+      console.log(
+        "Pinged your deployment. You successfully connected to MongoDB!"
+      );
     }
-  } catch (e) {
-    cached.promise = undefined;
+  } catch (e: any) {
+    cached.promise = null;
+    console.error('Mongo connect error:', e?.message);
+    if (e?.errorResponse) console.error('Mongo errorResponse:', e.errorResponse);
     throw e;
   }
 
-  return cached.conn;
+  global.mongoose = cached;
+  return cached.conn!;
 }
 
 export default dbConnect;

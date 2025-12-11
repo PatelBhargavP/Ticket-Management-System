@@ -12,8 +12,5 @@ export async function GET(request: NextRequest) {
 
   const users = await AppUser.find();
  
-  return new Response(JSON.stringify(users), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' }
-  });
+  return NextResponse.json(users, { status: 200 });
 }

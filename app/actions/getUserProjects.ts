@@ -2,7 +2,7 @@
 
 import { Project } from "@/models";
 import { IProjectDetails, IProjectDocument } from "@/models/Project";
-import { FilterQuery } from "mongoose";
+import { QueryFilter } from "mongoose";
 import dbConnect from "@/lib/db";
 import { appUserAttributes, castProjectDocumentToDetails } from "@/lib/utils";
 import { IAppUser } from "@/models/User";
@@ -10,7 +10,7 @@ import { IAppUser } from "@/models/User";
 export async function getUserProjects(userId: string) {
     try {
         await dbConnect();
-        const filters = {} as FilterQuery<IProjectDocument>;
+        const filters = {} as QueryFilter<IProjectDocument>;
         if (userId) {
             filters.memberIds = { $in: [userId] }
         }

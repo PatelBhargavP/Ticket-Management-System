@@ -3,7 +3,7 @@
 import dbConnect from "@/lib/db";
 import { castUserDocumentToDetails } from "@/lib/utils";
 import { AppUser, IAppUser, IAppUserDocument } from "@/models/User";
-import { FilterQuery } from "mongoose";
+import { QueryFilter } from "mongoose";
 
 export async function upsertUser(params: Partial<IAppUser>) {
   try {
@@ -11,7 +11,7 @@ export async function upsertUser(params: Partial<IAppUser>) {
     if (!params.email && !params.userId) {
       return null
     }
-    const filter: FilterQuery<IAppUser> = {};
+    const filter: QueryFilter<IAppUser> = {};
     if (params.userId) {
       filter.userId = params.userId;
     }

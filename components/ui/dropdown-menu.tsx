@@ -26,6 +26,7 @@ function DropdownMenuTrigger({
   return (
     <DropdownMenuPrimitive.Trigger
       data-slot="dropdown-menu-trigger"
+      className={`cursor-pointer `+ props.className || ''}
       {...props}
     />
   )
@@ -202,9 +203,11 @@ function DropdownMenuSubTrigger({
   className,
   inset,
   children,
+  hideChevron,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.SubTrigger> & {
   inset?: boolean
+  hideChevron?: boolean
 }) {
   return (
     <DropdownMenuPrimitive.SubTrigger
@@ -217,7 +220,7 @@ function DropdownMenuSubTrigger({
       {...props}
     >
       {children}
-      <ChevronRightIcon className="ml-auto size-4" />
+      {!hideChevron && <ChevronRightIcon className="ml-auto size-4" />}
     </DropdownMenuPrimitive.SubTrigger>
   )
 }

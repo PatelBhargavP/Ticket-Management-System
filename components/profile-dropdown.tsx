@@ -59,7 +59,7 @@ export function ProfileDropdown({
                 <DropdownMenuGroup>
                     {mounted &&
                         <DropdownMenuSub>
-                            <DropdownMenuSubTrigger hideChevron={true}>
+                            <DropdownMenuSubTrigger className='cursor-pointer' hideChevron={true}>
                                 Set theme
                                 <DropdownMenuShortcut>
                                     <Button variant="ghost" size="icon">{
@@ -77,15 +77,15 @@ export function ProfileDropdown({
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                                 <DropdownMenuSubContent >
-                                    <DropdownMenuItem className='flex justify-between' onClick={() => setTheme("light")}>
+                                    <DropdownMenuItem className='cursor-pointer flex justify-between' onClick={() => setTheme("light")}>
                                         Light
                                         <Sun className="h-[1.2rem] w-[1.2rem]" />
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className='flex justify-between' onClick={() => setTheme("dark")}>
+                                    <DropdownMenuItem className='cursor-pointer flex justify-between' onClick={() => setTheme("dark")}>
                                         Dark
                                         <Moon className="h-[1.2rem] w-[1.2rem]" />
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className='flex justify-between' onClick={() => setTheme("system")}>
+                                    <DropdownMenuItem className='cursor-pointer flex justify-between' onClick={() => setTheme("system")}>
                                         System
                                         <Monitor className="h-[1.2rem] w-[1.2rem]" />
                                     </DropdownMenuItem>
@@ -97,7 +97,7 @@ export function ProfileDropdown({
 
                 <DropdownMenuItem
                     onClick={() => signOut({ callbackUrl: '/login' })}
-                    className="text-red-600 focus:text-red-600"
+                    className="cursor-pointer text-red-600 focus:text-red-600"
                 >
                     Sign out
                 </DropdownMenuItem>

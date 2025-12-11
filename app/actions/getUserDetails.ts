@@ -5,7 +5,7 @@ import { castUserDocumentToDetails } from "@/lib/utils";
 import { AppUser, IAppUser, IAppUserDocument } from "@/models/User";
 import { QueryFilter } from "mongoose";
 
-export async function getUserDetails(filter: QueryFilter<IAppUser>) {
+export async function getUserDetails(filter: QueryFilter<IAppUserDocument>) {
   try {
 
     await dbConnect();

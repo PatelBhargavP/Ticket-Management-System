@@ -11,7 +11,7 @@ export async function upsertUser(params: Partial<IAppUser>) {
     if (!params.email && !params.userId) {
       return null
     }
-    const filter: QueryFilter<IAppUser> = {};
+    const filter: QueryFilter<IAppUserDocument> = {};
     if (params.userId) {
       filter.userId = params.userId;
     }

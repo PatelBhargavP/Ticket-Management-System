@@ -160,14 +160,17 @@ Click **"Environment Variables"** and add:
 | `NEXTAUTH_SECRET` | A random secret string | Generate with: `openssl rand -base64 32` |
 | `GOOGLE_CLIENT_ID` | Your Google OAuth Client ID | From Step 2.3 |
 | `GOOGLE_CLIENT_SECRET` | Your Google OAuth Client Secret | From Step 2.3 |
-| `NEXTAUTH_URL` | Your Vercel deployment URL | Will be `https://your-app.vercel.app` (add after first deploy) |
+| `NEXTAUTH_URL` | (Optional) Your deployment URL | **Not required** - automatically detected from `VERCEL_URL` |
 
 **Important Notes:**
 - For `NEXTAUTH_SECRET`, generate a secure random string:
   ```bash
   openssl rand -base64 32
   ```
-- For `NEXTAUTH_URL`, you can add it after the first deployment when you know your URL
+- **`NEXTAUTH_URL` is now optional!** The app automatically detects the URL from Vercel's `VERCEL_URL` environment variable
+  - Works automatically for production and preview deployments
+  - Only set `NEXTAUTH_URL` if you need to override the automatic detection (e.g., custom domain)
+- `VERCEL_URL` is automatically provided by Vercel - you don't need to set it manually
 - Make sure to add these for **Production**, **Preview**, and **Development** environments
 
 ### 4.4 Deploy
@@ -184,21 +187,27 @@ Click **"Environment Variables"** and add:
 2. Navigate to **"APIs & Services"** → **"Credentials"**
 3. Click on your OAuth 2.0 Client ID
 4. Add to **"Authorized JavaScript origins"**:
-   - `https://your-app.vercel.app`
+   - `https://your-app.vercel.app` (production)
+   - `https://*.vercel.app` (for preview deployments - wildcard pattern)
 5. Add to **"Authorized redirect URIs"**:
-   - `https://your-app.vercel.app/api/auth/callback/google`
+   - `https://your-app.vercel.app/api/auth/callback/google` (production)
+   - `https://*.vercel.app/api/auth/callback/google` (for preview deployments - wildcard pattern)
 6. Click **"Save"**
 
-### 5.2 Update NEXTAUTH_URL in Vercel
-1. Go back to Vercel Dashboard
-2. Navigate to your project → **"Settings"** → **"Environment Variables"**
-3. Add or update `NEXTAUTH_URL`:
-   - Value: `https://your-app.vercel.app`
-4. Make sure it's set for **Production** environment
-5. **Redeploy** your application:
-   - Go to **"Deployments"** tab
-   - Click the **"..."** menu on the latest deployment
-   - Click **"Redeploy"**
+**Note:** Using wildcard patterns (`*.vercel.app`) allows all preview deployments to work automatically without manual configuration. This is recommended for easier development workflow.
+
+### 5.2 Verify Automatic URL Detection
+✅ **Good news!** `NEXTAUTH_URL` is now automatically detected from Vercel's `VERCEL_URL` environment variable.
+
+**No action needed** - The app will automatically:
+- Use `VERCEL_URL` for production deployments
+- Use `VERCEL_URL` for preview deployments (with dynamic URLs)
+- Fall back to localhost for local development
+
+**Optional:** If you want to override the automatic detection (e.g., for a custom domain), you can still set `NEXTAUTH_URL` manually:
+1. Go to Vercel Dashboard → Your Project → **"Settings"** → **"Environment Variables"**
+2. Add `NEXTAUTH_URL` with your custom domain URL
+3. Redeploy your application
 
 ---
 
@@ -228,7 +237,7 @@ Click **"Environment Variables"** and add:
 1. Go to Vercel Dashboard → Your Project → **"Settings"** → **"Domains"**
 2. Enter your domain name (e.g., `tickets.yourdomain.com`)
 3. Follow Vercel's DNS configuration instructions
-4. Update `NEXTAUTH_URL` environment variable to your custom domain
+4. **Optional:** Set `NEXTAUTH_URL` environment variable to your custom domain (if you want to override automatic detection)
 5. Update Google OAuth redirect URIs to include your custom domain
 
 ---
@@ -248,10 +257,12 @@ Click **"Environment Variables"** and add:
 - **Verify** `MONGODB_URI` environment variable is set correctly
 
 ### Authentication Not Working
-- **Verify** `NEXTAUTH_URL` matches your deployment URL exactly
-- **Check** Google OAuth redirect URIs include your Vercel URL
+- **Verify** Google OAuth redirect URIs include your Vercel URL (or use wildcard pattern)
+- **Check** that `VERCEL_URL` is available (automatically provided by Vercel)
+- **Optional:** If using a custom domain, set `NEXTAUTH_URL` explicitly
 - **Ensure** `NEXTAUTH_SECRET` is set and is a secure random string
 - **Verify** `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are correct
+- **Note:** `NEXTAUTH_URL` is now automatically detected - no need to set it manually unless using a custom domain
 
 ### Environment Variables Not Loading
 - **Ensure** variables are added for the correct environment (Production/Preview/Development)
@@ -312,9 +323,9 @@ For most small to medium applications, the free tier is sufficient.
 - [ ] Project imported to Vercel
 - [ ] All environment variables added to Vercel
 - [ ] First deployment successful
-- [ ] Google OAuth redirect URIs updated with Vercel URL
-- [ ] `NEXTAUTH_URL` updated in Vercel
-- [ ] Application redeployed with updated settings
+- [ ] Google OAuth redirect URIs updated with Vercel URL (or wildcard pattern)
+- [ ] Verified automatic URL detection is working (no need to set NEXTAUTH_URL manually)
+- [ ] Application tested and working
 - [ ] Login flow tested and working
 - [ ] Core features tested (create project, create ticket, etc.)
 

@@ -109,8 +109,8 @@ const TicketSchema = new Schema<ITicketDocument>(
 TicketSchema.set('toJSON', {
     virtuals: true,
     versionKey: false,
-    transform: (_, ret) => {
-        ret.id = ret._id;
+    transform: (_, ret: any) => {
+        ret.id = ret._id.toString();
         delete ret._id;
     }
 });
@@ -123,9 +123,10 @@ TicketSchema.pre('save', async function () {
     // console.log("pre save function: ", doc);
     if (!doc.identifier) {
         let randomString = '';
-        let taskCount = await (await (this.constructor as Model<ITicketDocument>).find({ projectId: doc.projectId })).length;
+        const projectIdString = typeof doc.projectId === 'string' ? doc.projectId : (doc.projectId as any)?._id?.toString() || doc.projectId?.toString();
+        let taskCount = await (await (this.constructor as Model<ITicketDocument>).find({ projectId: projectIdString })).length;
         let isUnique = false
-        const projectDetails = await Project.findOne({ projectId: doc.projectId }).lean<{identifier: string; name: string;}>();
+        const projectDetails = await Project.findOne({ projectId: projectIdString }).lean<{identifier: string; name: string;}>();
         do {
             randomString = `${projectDetails?.identifier}-${taskCount + 1}`;
             try {

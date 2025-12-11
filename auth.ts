@@ -2,13 +2,12 @@ import "next-auth";
 import "next-auth/jwt";
 import NextAuth, { AuthOptions, DefaultSession } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { Provider } from 'next-auth/providers';
 import { IAppUser } from './models/User';
 import { getUserDetails } from "./app/actions/getUserDetails";
 import { createUser } from "./app/actions/createUser";
 import { upsertUser } from "./app/actions/updateUser";
 
-const providers: Provider[] = [
+const providers: AuthOptions['providers'] = [
   // Credentials({
   //   credentials: {
   //     email: { label: "Email", type: "text" },
@@ -39,6 +38,9 @@ export const providerMap = providers
 
 export const authOptions: AuthOptions = {
   providers,
+  // NEXTAUTH_URL is automatically set by lib/env-loader.ts
+  // It uses VERCEL_URL on Vercel deployments (production and preview)
+  // Falls back to localhost for local development
   pages: {
     signIn: "/login",
   },

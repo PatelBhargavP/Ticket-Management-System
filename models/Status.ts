@@ -59,9 +59,9 @@ const StatusSchema = new Schema<IStatusDocument>(
 StatusSchema.set('toJSON', {
   virtuals: true,
   versionKey: false,
-  transform: (_, ret) => {
-    ret.id = ret._id;
-    ret.statusId = ret._id;
+  transform: (_, ret: any) => {
+    ret.id = ret._id.toString();
+    ret.statusId = ret._id.toString();
     delete ret._id;
   }
 });

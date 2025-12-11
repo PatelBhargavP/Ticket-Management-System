@@ -15,6 +15,23 @@ if (existsSync(envPath)) {
   config({ path: envPath });
 }
 
+// Dynamically set NEXTAUTH_URL if not already set
+// This ensures it works on Vercel (production and preview deployments) and local dev
+if (!process.env.NEXTAUTH_URL) {
+  // Check VERCEL_URL (automatically provided by Vercel)
+  if (process.env.VERCEL_URL) {
+    process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_URL}`;
+  } 
+  // Fallback to localhost for local development
+  else if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+    process.env.NEXTAUTH_URL = 'http://localhost:3000';
+  }
+  // Check NEXT_PUBLIC_BASE_URL as fallback
+  else if (process.env.NEXT_PUBLIC_BASE_URL) {
+    process.env.NEXTAUTH_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  }
+}
+
 // Export a function to verify env vars are loaded
 export function verifyEnvVars() {
   const requiredVars = ['MONGODB_URI', 'NEXTAUTH_SECRET'];

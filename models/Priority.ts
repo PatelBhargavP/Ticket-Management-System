@@ -54,9 +54,9 @@ const PrioritySchema = new Schema<IPriorityDocument>(
 PrioritySchema.set('toJSON', {
   virtuals: true,
   versionKey: false,
-  transform: (_, ret) => {
-    ret.id = ret._id;
-    ret.priorityId = ret._id;
+  transform: (_, ret: any) => {
+    ret.id = ret._id.toString();
+    ret.priorityId = ret._id.toString();
     delete ret._id;
   }
 });

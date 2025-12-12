@@ -36,11 +36,33 @@ Before starting, ensure you have:
 6. Click **"Add User"**
 
 ### 1.4 Configure Network Access
+
+**Important**: Vercel uses dynamic IP addresses that change with each deployment and scaling event. You cannot whitelist specific Vercel IP addresses.
+
+#### Option A: Allow All IPs (Recommended for Vercel)
 1. Go to **"Network Access"** in the left sidebar
 2. Click **"Add IP Address"**
-3. For Vercel deployment, click **"Allow Access from Anywhere"** (0.0.0.0/0)
-   - ⚠️ **Security Note**: For production, consider restricting to Vercel's IP ranges
+3. Click **"Allow Access from Anywhere"** (0.0.0.0/0)
 4. Click **"Confirm"**
+
+**Security**: While this allows connections from any IP, MongoDB Atlas enforces:
+- ✅ **TLS/SSL encryption** for all connections (required)
+- ✅ **Strong authentication** via username/password
+- ✅ **Database user permissions** (only authorized users can access)
+- ✅ **Connection string security** (keep your MONGODB_URI secret)
+
+#### Option B: MongoDB Atlas Vercel Integration (Most Secure)
+1. In MongoDB Atlas, go to **"Integrations"** → **"Vercel"**
+2. Click **"Add Integration"** and authorize Vercel
+3. This automatically manages IP allowlisting for your Vercel deployments
+4. Provides better security and easier management
+
+#### Option C: VPC Peering (Enterprise Solution)
+For maximum security, you can set up VPC peering between Vercel and MongoDB Atlas:
+- Requires Vercel Enterprise plan
+- Provides private network connectivity
+- Eliminates public internet exposure
+- More complex setup and higher cost
 
 ### 1.5 Get Connection String
 1. Go to **"Database"** → Click **"Connect"** on your cluster
@@ -183,18 +205,54 @@ Click **"Environment Variables"** and add:
 ## Step 5: Update Google OAuth Settings
 
 ### 5.1 Add Vercel URL to Google OAuth
+
+⚠️ **Important**: Google OAuth does **NOT support wildcard patterns** in redirect URIs for security reasons. Each redirect URI must be explicitly listed.
+
+#### Option A: Production Only (Simplest)
+If you only need OAuth to work on production:
+
 1. Go back to [Google Cloud Console](https://console.cloud.google.com/)
 2. Navigate to **"APIs & Services"** → **"Credentials"**
 3. Click on your OAuth 2.0 Client ID
 4. Add to **"Authorized JavaScript origins"**:
    - `https://your-app.vercel.app` (production)
-   - `https://*.vercel.app` (for preview deployments - wildcard pattern)
 5. Add to **"Authorized redirect URIs"**:
    - `https://your-app.vercel.app/api/auth/callback/google` (production)
-   - `https://*.vercel.app/api/auth/callback/google` (for preview deployments - wildcard pattern)
 6. Click **"Save"**
 
-**Note:** Using wildcard patterns (`*.vercel.app`) allows all preview deployments to work automatically without manual configuration. This is recommended for easier development workflow.
+**Note:** Preview deployments won't work with OAuth using this approach. You'll need to test OAuth on production or use Option B.
+
+#### Option B: Production + Preview Deployments (Recommended)
+To support both production and preview deployments:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Navigate to **"APIs & Services"** → **"Credentials"**
+3. Click on your OAuth 2.0 Client ID
+4. Add to **"Authorized JavaScript origins"**:
+   - `https://your-app.vercel.app` (production)
+   - Add preview deployment URLs as needed (see below)
+5. Add to **"Authorized redirect URIs"**:
+   - `https://your-app.vercel.app/api/auth/callback/google` (production)
+   - Add preview deployment URLs as needed (see below)
+6. Click **"Save"**
+
+**For Preview Deployments:**
+- Each preview deployment gets a unique URL like: `https://your-app-git-branch-username.vercel.app`
+- You'll need to add each preview URL manually to Google OAuth settings
+- **Workaround**: Use a custom domain (Option C) which has a fixed URL
+
+#### Option C: Custom Domain (Best for Production + Previews)
+Using a custom domain provides a fixed URL that works for all deployments:
+
+1. Set up a custom domain in Vercel (see Step 7)
+2. Add to **"Authorized JavaScript origins"**:
+   - `https://your-custom-domain.com`
+3. Add to **"Authorized redirect URIs"**:
+   - `https://your-custom-domain.com/api/auth/callback/google`
+4. Set `NEXTAUTH_URL` environment variable to your custom domain
+5. All deployments (production and preview) will use the custom domain
+
+**Note:** This requires a custom domain, but provides the best user experience and works for all deployment types.
 
 ### 5.2 Verify Automatic URL Detection
 ✅ **Good news!** `NEXTAUTH_URL` is now automatically detected from Vercel's `VERCEL_URL` environment variable.
@@ -257,12 +315,16 @@ Click **"Environment Variables"** and add:
 - **Verify** `MONGODB_URI` environment variable is set correctly
 
 ### Authentication Not Working
-- **Verify** Google OAuth redirect URIs include your Vercel URL (or use wildcard pattern)
+- **Verify** Google OAuth redirect URIs match **exactly** (Google doesn't support wildcards)
+  - Production: `https://your-app.vercel.app/api/auth/callback/google`
+  - Preview: Each preview URL must be added individually
+  - Custom domain: `https://your-domain.com/api/auth/callback/google`
 - **Check** that `VERCEL_URL` is available (automatically provided by Vercel)
 - **Optional:** If using a custom domain, set `NEXTAUTH_URL` explicitly
 - **Ensure** `NEXTAUTH_SECRET` is set and is a secure random string
 - **Verify** `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are correct
 - **Note:** `NEXTAUTH_URL` is now automatically detected - no need to set it manually unless using a custom domain
+- **Common Issue:** Preview deployments fail OAuth because their URLs aren't in Google OAuth settings - either add them manually or use a custom domain
 
 ### Environment Variables Not Loading
 - **Ensure** variables are added for the correct environment (Production/Preview/Development)
@@ -292,11 +354,17 @@ For most small to medium applications, the free tier is sufficient.
 
 1. **Never commit** `.env` files to Git (already in `.gitignore`)
 2. **Use strong** `NEXTAUTH_SECRET` (32+ characters, random)
-3. **Restrict** MongoDB network access to Vercel IPs when possible
+3. **MongoDB Network Security**:
+   - Use MongoDB Atlas Vercel Integration (recommended) OR
+   - Use 0.0.0.0/0 with strong authentication (username/password)
+   - MongoDB Atlas requires TLS/SSL encryption for all connections
+   - Keep your `MONGODB_URI` connection string secret
+   - Use database users with minimal required permissions
 4. **Enable** MongoDB Atlas encryption at rest
-5. **Regularly rotate** OAuth credentials
-6. **Monitor** Vercel logs for suspicious activity
+5. **Regularly rotate** OAuth credentials and database passwords
+6. **Monitor** Vercel logs and MongoDB Atlas access logs for suspicious activity
 7. **Use** environment-specific variables (don't use production secrets in preview)
+8. **Enable** MongoDB Atlas IP Access List alerts for failed connection attempts
 
 ---
 
@@ -332,3 +400,5 @@ For most small to medium applications, the free tier is sufficient.
 ---
 
 **Congratulations! 🎉 Your Ticket Management System is now live on Vercel!**
+
+

@@ -58,11 +58,12 @@ export const config = {
         /*
          * Match all request paths except for the ones starting with:
          * - api/auth (NextAuth.js routes)
+         * - api/mcp (MCP server routes - uses API key authentication)
          * - _next/static (static files)
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
          * - public files (public folder)
          */
-        '/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!api/auth|api/mcp|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ]
 }

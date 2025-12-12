@@ -13,7 +13,6 @@ let cached: { conn?: MongooseType | null; promise?: Promise<MongooseType> | null
 async function dbConnect(): Promise<MongooseType> {
   // mongoose.set('debug', true);
   const MONGODB_URI = process.env.MONGODB_URI;
-  console.log('MONGODB_URI:', MONGODB_URI);
   if (!MONGODB_URI) {
     throw new Error(
       "Please define the MONGODB_URI environment variable inside .env file"

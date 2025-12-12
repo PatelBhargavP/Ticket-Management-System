@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { Button } from './ui/button'
-import { Monitor, Moon, Sun } from 'lucide-react'
+import { Monitor, Moon, Sun, Key } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 
 interface ProfileDropdownProps {
@@ -94,6 +94,14 @@ export function ProfileDropdown({
                         </DropdownMenuSub>
                     }
                 </DropdownMenuGroup>
+
+                <DropdownMenuItem
+                    onClick={() => router.push('/api-keys')}
+                    className="cursor-pointer"
+                >
+                    <Key className="mr-2 h-4 w-4" />
+                    API Keys
+                </DropdownMenuItem>
 
                 <DropdownMenuItem
                     onClick={() => signOut({ callbackUrl: '/login' })}

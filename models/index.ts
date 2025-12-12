@@ -3,13 +3,15 @@ import { Priority } from './Priority';
 import { Project } from './Project';
 import { Ticket } from './Ticket';
 import { Status } from './Status';
+import { ApiKey } from './ApiKey';
 
 export {
   AppUser,
   Project,
   Ticket,
   Status,
-  Priority
+  Priority,
+  ApiKey
 };
 
 export interface PaginationParams {

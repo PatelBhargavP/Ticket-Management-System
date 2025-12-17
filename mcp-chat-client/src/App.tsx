@@ -45,7 +45,7 @@ function App() {
       <ChatInterface mcpClient={mcpClient} />
       <button
         onClick={handleLogout}
-        className="fixed bottom-4 right-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm"
+        className="fixed top-4 right-4 px-4 py-2 bg-gray-600 text-white cursor-pointer rounded-lg hover:bg-gray-700 text-sm z-50"
       >
         Logout
       </button>

@@ -95,9 +95,9 @@ export default function ChatInterface({ mcpClient }: ChatInterfaceProps) {
             <p className="text-lg font-medium mb-2">Welcome!</p>
             <p>Try commands like:</p>
             <ul className="mt-2 space-y-1 text-sm">
-              <li>"create project called MyProject"</li>
+              <li>"create project called &lt;project name&gt;"</li>
               <li>"list projects"</li>
-              <li>"create ticket in PROJECT123"</li>
+              <li>"create ticket in &lt;project name&gt;"</li>
             </ul>
           </div>
         )}

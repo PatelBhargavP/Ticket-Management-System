@@ -73,9 +73,10 @@ export async function GET(request: NextRequest) {
 
     await dbConnect();
 
-    // Get user's API keys, sorted by creation date (newest first)
+    // Get user's active API keys only, sorted by creation date (newest first)
     const apiKeys = await ApiKey.find({
       userId: token.userId,
+      isActive: true, // Only return active (non-deleted) keys
     })
       .select('-keyHash') // Don't expose the hash
       .sort({ createdAt: -1 }) // Sort by creation date, newest first

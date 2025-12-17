@@ -3,6 +3,8 @@
 import dbConnect from "@/lib/db";
 import { appUserAttributes, castTransactionDocumentToDetails } from "@/lib/utils";
 import { ITransactionDocument, Transaction } from "@/models/Transaction";
+// Import models to ensure they're registered before populate operations
+import { Ticket, Project } from "@/models";
 
 export async function getTransactions(entityId: string) {
     try {

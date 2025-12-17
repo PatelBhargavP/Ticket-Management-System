@@ -1,9 +1,10 @@
-import mongoose, { CallbackError, Model, ObjectId, Schema, Types } from "mongoose";
-import { AppUser, IAppUser, IAppUserDocument } from "./User";
+import mongoose, { Model, ObjectId, Schema } from "mongoose";
+import { AppUser, IAppUser } from "./User";
 import { AppTimeStamp } from "./time-stamp";
-import { Project, IProjectBase, IProjectDocument } from "./Project";
 import { IStatus } from "./Status";
 import { IPriority } from "./Priority";
+import { Project } from "./Project";
+import { Ticket } from "./Ticket";
 
 
 
@@ -15,9 +16,12 @@ export type ITransactionValues = {
     priorityId: IPriority;
 }
 
+const projectBaseName = Project.baseModelName;
+const ticketBaseName = Ticket.baseModelName;
+
 export type ITransactionValueTypes = keyof ITransactionValues;
 export type ITransactionTypes = 'create' | 'update';
-export type ITransactionEntityTypes = 'Project' | 'Ticket';
+export type ITransactionEntityTypes =  'Project' | 'Ticket';
 
 // Generic interface where T must be a valid key of ITransactionValues
 export type ITransactionField<T> = {

@@ -43,11 +43,7 @@ interface CreateApiKeyResult {
   expiresAt?: Date | string;
 }
 
-interface ApiKeysPageClientProps {
-  apiKeysPromise?: Promise<ApiKeyListItem[]>;
-}
-
-export default function ApiKeysPageClient({ apiKeysPromise }: ApiKeysPageClientProps) {
+export default function ApiKeysPageClient() {
   const router = useRouter();
   const [apiKeys, setApiKeys] = useState<ApiKeyListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +58,7 @@ export default function ApiKeysPageClient({ apiKeysPromise }: ApiKeysPageClientP
   const [keyName, setKeyName] = useState('');
   const [expiresInDays, setExpiresInDays] = useState('0.5');
 
-  // Fetch API keys from API endpoint
+  // Fetch API keys from API endpoint (already sorted by creation date, newest first)
   const fetchApiKeys = async () => {
     try {
       const response = await fetch('/api/mcp-auth/api-key', {
@@ -74,7 +70,7 @@ export default function ApiKeysPageClient({ apiKeysPromise }: ApiKeysPageClientP
         throw new Error('Failed to fetch API keys');
       }
 
-      const data = await response.json();
+      const data: ApiKeyListItem[] = await response.json();
       setApiKeys(data);
       setLoading(false);
     } catch (error) {
@@ -83,23 +79,10 @@ export default function ApiKeysPageClient({ apiKeysPromise }: ApiKeysPageClientP
     }
   };
 
-  // Initial load - use promise if provided, otherwise fetch from API
+  // Initial load - fetch API keys from endpoint
   useEffect(() => {
-    if (apiKeysPromise) {
-      apiKeysPromise
-        .then((keys) => {
-          setApiKeys(keys);
-          setLoading(false);
-        })
-        .catch((error) => {
-          console.error('Error loading API keys:', error);
-          // Fallback to API fetch
-          fetchApiKeys();
-        });
-    } else {
-      fetchApiKeys();
-    }
-  }, [apiKeysPromise]);
+    fetchApiKeys();
+  }, []);
 
   const handleCreateKey = async (e: React.FormEvent) => {
     e.preventDefault();

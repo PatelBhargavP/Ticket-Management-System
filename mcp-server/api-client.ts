@@ -33,6 +33,9 @@ export class ApiClient {
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      // Add header to indicate this is an internal MCP server request
+      // This allows the middleware to distinguish internal MCP calls from external requests
+      'X-MCP-Internal': 'true',
       ...(options.headers as Record<string, string>),
     };
 

@@ -35,6 +35,22 @@ export default withAuth(
                     return true;
                 }
                 
+                // All API routes (except /api/mcp which is excluded from middleware via matcher)
+                // require NextAuth session authentication, UNLESS it's an internal MCP server request.
+                // Internal MCP requests are identified by the X-MCP-Internal header.
+                // This ensures external access requires session, while MCP server can use API keys.
+                if (req.nextUrl.pathname.startsWith("/api/")) {
+                    // Check if this is an internal MCP server request
+                    const isMCPInternal = req.headers.get('x-mcp-internal') === 'true';
+                    if (isMCPInternal) {
+                        // Allow internal MCP requests with Bearer token (validated in route handler)
+                        return true;
+                    }
+                    // For external API requests, require NextAuth session
+                    // Note: /api/mcp is excluded from this middleware via matcher config
+                    return !!token;
+                }
+                
                 // All other routes require authentication
                 return !!token;
             },

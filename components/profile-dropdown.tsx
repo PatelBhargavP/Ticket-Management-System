@@ -96,10 +96,10 @@ export function ProfileDropdown({
 
                 <DropdownMenuItem
                     onClick={() => router.push('/api-keys')}
-                    className="cursor-pointer"
+                    className="cursor-pointer flex justify-between"
                 >
-                    <Key className="mr-2 h-4 w-4" />
                     API Keys
+                    <Key className="mr-2 h-4 w-4" />
                 </DropdownMenuItem>
 
                 <DropdownMenuItem

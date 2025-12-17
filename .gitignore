@@ -10,3 +10,6 @@ logs
 .env*
 yarn-error.log
 npm-debug.log
+.cursor/
+*.log
+debug.log

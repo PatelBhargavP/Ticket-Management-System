@@ -22,7 +22,6 @@ export default withAuth(
         
         // Redirect authenticated users away from login page
         if (request.nextauth?.token && request.nextUrl.pathname.startsWith('/login')) {
-            console.log('authorized login access', request.url)
             return NextResponse.redirect(new URL('/projects', request.url));
         }
         

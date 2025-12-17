@@ -43,7 +43,6 @@ export default async function tokenParser(req: NextRequest): Promise<ITokenParse
     const token = await getToken({ req });
     if (token) {
         // Signed in
-        console.log("JSON Web Token", JSON.stringify(token, null, 2))
         returnVal.jwt = token;
     } else {
         // Not Signed in

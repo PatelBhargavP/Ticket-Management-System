@@ -36,7 +36,6 @@ export function ProfileDropdown({
     const { theme, setTheme } = useTheme();
 
     useEffect(() => {
-        console.log(name, avatarUrl, email)
         setMounted(true);
     }, []);
 

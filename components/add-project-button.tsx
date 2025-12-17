@@ -8,7 +8,7 @@ export default function AddProjectButton() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleAddProject = (name: string) => {
-    console.log('Added project:', name);
+    // Project added successfully
   };
 
   return (

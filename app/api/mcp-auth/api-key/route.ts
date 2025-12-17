@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
 
     // Create API key
     const result = await createApiKey(name, expiresInDays);
-    console.log('API key created successfully for user:', token.userId, 'result:', result);
 
     return NextResponse.json(result, okaResponseStatus);
   } catch (error) {

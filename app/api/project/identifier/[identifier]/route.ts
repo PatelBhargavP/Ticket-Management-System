@@ -6,12 +6,8 @@ export async function GET(
     req: NextRequest,
     { params }: { params: Promise<{ identifier: string }> }
 ) {
-    console.log('identifier API: ', req.body)
     const paramsVal = await params;
-
-
     const identifier = paramsVal.identifier;
-    console.log('identifier API 2: ', paramsVal)
 
     if (!identifier) {
         return NextResponse.json({ message: 'Project identifier is required' }, { status: 400 });

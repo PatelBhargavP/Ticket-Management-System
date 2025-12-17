@@ -381,7 +381,7 @@ export default function ApiKeysPageClient({ apiKeysPromise }: ApiKeysPageClientP
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <Alert variant="destructive">
+            <Alert>
               <AlertDescription>
                 <strong>Important:</strong> This is the only time you'll see this key. Make sure to copy it now.
               </AlertDescription>

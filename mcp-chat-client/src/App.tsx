@@ -3,7 +3,7 @@ import { MCPClient } from './lib/mcp-client';
 import AuthForm from './components/AuthForm';
 import ChatInterface from './components/ChatInterface';
 
-const MCP_SERVER_URL = import.meta.env.VITE_MCP_SERVER_URL || 'http://localhost:3000/api/mcp';
+const MCP_SERVER_URL = import.meta.env.VITE_MCP_SERVER_URL || 'http://localhost:3001';
 
 function App() {
   const [apiKey, setApiKey] = useState<string | null>(null);

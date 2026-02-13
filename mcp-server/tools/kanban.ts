@@ -9,18 +9,14 @@ import type { ProjectTool } from './projects';
 
 export const kanbanSetColumnOrderSchema = z.object({
   projectId: z.string().min(1, 'Project ID is required'),
-  groupType: z.enum(['status', 'priority'], {
-    errorMap: () => ({ message: 'Group type must be either "status" or "priority"' }),
-  }),
+  groupType: z.enum(['status', 'priority']).describe('Either "status" or "priority"'),
   columns: z.array(z.string()).min(1, 'At least one column ID is required'),
   projectIdentifier: z.string().optional(),
 });
 
 export const kanbanGetColumnOrderSchema = z.object({
   projectId: z.string().min(1, 'Project ID is required'),
-  groupType: z.enum(['status', 'priority'], {
-    errorMap: () => ({ message: 'Group type must be either "status" or "priority"' }),
-  }),
+  groupType: z.enum(['status', 'priority']).describe('Either "status" or "priority"'),
 });
 
 export const kanbanTools: ProjectTool[] = [

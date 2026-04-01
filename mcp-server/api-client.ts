@@ -107,6 +107,13 @@ export class ApiClient {
       }
     } catch (error) {
       if (error instanceof Error) {
+        const isFetchFailed = error.message.toLowerCase().includes('fetch failed') || error.message.toLowerCase().includes('networkerror');
+        if (isFetchFailed) {
+          throw new Error(
+            `Failed to reach API backend at ${url}. Is the Ticket Management app running on ${this.baseUrl}? ` +
+            `Original message: ${error.message}`
+          );
+        }
         throw error;
       }
       throw new Error('Unknown error occurred during API request');

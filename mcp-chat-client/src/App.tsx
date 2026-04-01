@@ -3,31 +3,53 @@ import { MCPClient } from './lib/mcp-client';
 import AuthForm from './components/AuthForm';
 import ChatInterface from './components/ChatInterface';
 
-const MCP_SERVER_URL = import.meta.env.VITE_MCP_SERVER_URL || 'http://localhost:3001';
+const MCP_SERVER_URL = import.meta.env.VITE_MCP_SERVER_URL || 'http://localhost:3001/mcp';
 
 function App() {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [mcpClient, setMcpClient] = useState<MCPClient | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load API key from localStorage
     const storedKey = localStorage.getItem('mcp_api_key');
-    if (storedKey) {
-      setApiKey(storedKey);
-      setMcpClient(new MCPClient({
-        serverUrl: MCP_SERVER_URL,
-        apiKey: storedKey,
-      }));
-    }
+    if (!storedKey) return;
+
+    const initClient = async () => {
+      setIsConnecting(true);
+      try {
+        const client = new MCPClient({ serverUrl: MCP_SERVER_URL, apiKey: storedKey });
+        await client.connect();
+        setApiKey(storedKey);
+        setMcpClient(client);
+      } catch (err) {
+        setConnectionError(err instanceof Error ? err.message : 'Failed to connect to MCP server');
+      } finally {
+        setIsConnecting(false);
+      }
+    };
+
+    initClient();
   }, []);
 
-  const handleAuth = (key: string) => {
+  const handleAuth = async (key: string) => {
     localStorage.setItem('mcp_api_key', key);
-    setApiKey(key);
-    setMcpClient(new MCPClient({
-      serverUrl: MCP_SERVER_URL,
-      apiKey: key,
-    }));
+
+    setIsConnecting(true);
+    setConnectionError(null);
+
+    try {
+      const client = new MCPClient({ serverUrl: MCP_SERVER_URL, apiKey: key });
+      await client.connect();
+      setApiKey(key);
+      setMcpClient(client);
+    } catch (err) {
+      setConnectionError(err instanceof Error ? err.message : 'Failed to connect to MCP server');
+      setApiKey(null);
+      setMcpClient(null);
+    } finally {
+      setIsConnecting(false);
+    }
   };
 
   const handleLogout = () => {
@@ -35,6 +57,28 @@ function App() {
     setApiKey(null);
     setMcpClient(null);
   };
+
+  if (isConnecting) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-lg font-medium">Connecting to MCP server...</div>
+      </div>
+    );
+  }
+
+  if (connectionError) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center space-y-4 p-4">
+        <div className="text-red-600">{connectionError}</div>
+        <button
+          onClick={() => setConnectionError(null)}
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if (!apiKey || !mcpClient) {
     return <AuthForm onAuth={handleAuth} serverUrl={MCP_SERVER_URL} />;
@@ -52,5 +96,6 @@ function App() {
     </div>
   );
 }
+
 
 export default App;

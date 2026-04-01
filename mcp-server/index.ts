@@ -1,20 +1,19 @@
 #!/usr/bin/env node
 /**
  * Standalone MCP Server for Ticket Management System
- * 
- * This is a standalone HTTP server that exposes MCP tools.
- * 
+ *
+ * This is a standalone MCP server using stdio transport.
+ *
  * Installation:
  *   npm install
  *   cp .env.example .env.local
- * 
+ *
  * Usage:
  *   npm run dev     # Development mode
  *   npm run build   # Build to dist/
  *   npm start       # Run production build
- * 
+ *
  * Environment Variables:
- *   MCP_PORT - Port to run server on (default: 3001)
  *   NEXTAUTH_URL - Base URL for the Ticket Management System API (default: http://localhost:3000)
  *   AUTH_TOKEN - Optional authentication token for API requests
  *   NODE_ENV - Environment (development/production)
@@ -24,25 +23,28 @@
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-
+import { randomUUID } from 'crypto';
+import express from 'express';
+import cors from 'cors';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Try to load from .env.local first, then .env.example
 dotenv.config({ path: path.resolve(__dirname, '.env.local') });
 dotenv.config({ path: path.resolve(__dirname, '.env.example') });
 
-import http from 'http';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { CallToolRequestSchema, ListToolsRequestSchema, ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
 import { ApiClient } from './api-client.js';
 import { projectTools } from './tools/projects.js';
 import { ticketTools } from './tools/tickets.js';
 import { kanbanTools } from './tools/kanban.js';
 
+
 // Configuration
-const MCP_PORT = parseInt(process.env.MCP_PORT || '3001', 10);
 const NEXTAUTH_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 const AUTH_TOKEN = process.env.AUTH_TOKEN;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const MCP_PORT = parseInt(process.env.MCP_PORT || '3001', 10);
 
 // Validate configuration
 if (!NEXTAUTH_URL) {
@@ -57,159 +59,142 @@ const allTools = [
   ...kanbanTools,
 ];
 
-// Handle JSON-RPC requests
-async function handleRpcRequest(method: string, params?: unknown, authToken?: string): Promise<{ result?: unknown; error?: { code: number; message: string } }> {
-  // Create API client with the auth token from the request
-  const apiClient = new ApiClient({
+/**
+ * Create a new MCP Server + Transport pair for a single session.
+ *
+ * The SDK's _initialized flag is per-transport-instance, so every new
+ * initialize handshake must get a brand-new transport (and a fresh Server
+ * bound to it). Subsequent requests in the same session are routed to the
+ * same transport via the sessions map.
+ *
+ * authToken comes from the client's Authorization header so the backend API
+ * receives the same credentials the chat client was given.
+ */
+async function createSessionTransport(
+  sessions: Map<string, StreamableHTTPServerTransport>,
+  authToken?: string
+): Promise<StreamableHTTPServerTransport> {
+  // Per-session API client: prefer the token forwarded from the client,
+  // fall back to the server-level AUTH_TOKEN env var.
+  const sessionApiClient = new ApiClient({
     apiBaseUrl: NEXTAUTH_URL,
     authToken: authToken || AUTH_TOKEN,
   });
 
-  if (NODE_ENV === 'development') {
-    console.log(`[MCP Server] RPC Request: ${method}`);
-    if (authToken) {
-      console.log(`[MCP Server] Auth: Bearer token provided by client`);
-    } else if (AUTH_TOKEN) {
-      console.log(`[MCP Server] Auth: Using server AUTH_TOKEN`);
-    } else {
-      console.log(`[MCP Server] Auth: No authentication provided`);
-    }
-  }
-
-  try {
-    if (method === 'tools/list') {
-      return {
-        result: {
-          tools: allTools.map((tool) => ({
-            name: tool.name,
-            description: tool.description,
-            inputSchema: tool.inputSchema,
-          })),
-        },
-      };
-    }
-
-    if (method === 'tools/call') {
-      const callParams = params as { name: string; arguments: unknown };
-      if (!callParams.name) {
-        return {
-          error: { code: -32602, message: 'Tool name is required' },
-        };
-      }
-
-      const tool = allTools.find((t) => t.name === callParams.name);
-      if (!tool) {
-        return {
-          error: { code: -32601, message: `Unknown tool: ${callParams.name}` },
-        };
-      }
-
-      const result = await tool.handler(callParams.arguments, apiClient);
-      return { result };
-    }
-
-    return {
-      error: { code: -32601, message: `Unknown method: ${method}` },
-    };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return {
-      error: { code: -32603, message },
-    };
-  }
-}
-
-// Create HTTP server
-const server = http.createServer(async (req, res) => {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.writeHead(200);
-    res.end();
-    return;
-  }
-
-  // Only accept POST requests to /
-  if (req.method !== 'POST' || req.url !== '/') {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Not found' }));
-    return;
-  }
-
-  // Parse request body
-  let body = '';
-  req.on('data', (chunk) => {
-    body += chunk.toString();
+  const transport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: () => randomUUID(),
+    onsessioninitialized: (sessionId) => {
+      console.error(`[MCP] Session created: ${sessionId}`);
+      sessions.set(sessionId, transport);
+    },
   });
 
-  req.on('end', async () => {
+  const server = new Server(
+    { name: 'ticket-management-mcp-server', version: '1.0.0' },
+    { capabilities: { tools: {} } }
+  );
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: allTools.map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+      inputSchema: tool.inputSchema,
+    })),
+  }));
+
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { name, arguments: args } = request.params;
+    const tool = allTools.find((t) => t.name === name);
+    if (!tool) {
+      throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+    }
     try {
-      const request = JSON.parse(body);
-      const { jsonrpc = '2.0', id = null, method, params } = request;
-
-      // Extract authorization token from request headers
-      const authHeader = req.headers.authorization || '';
-      let authToken: string | undefined;
-      if (authHeader.startsWith('Bearer ')) {
-        authToken = authHeader.slice(7); // Remove 'Bearer ' prefix
-      }
-
-      // Handle the RPC request
-      const response = await handleRpcRequest(method, params, authToken);
-
-      // Send JSON-RPC response
-      const rpcResponse = {
-        jsonrpc,
-        id,
-        ...response,
-      };
-
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(rpcResponse));
+      return await tool.handler(args, sessionApiClient);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Invalid JSON';
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(
-        JSON.stringify({
-          jsonrpc: '2.0',
-          id: null,
-          error: { code: -32700, message },
-        })
+      throw new McpError(
+        ErrorCode.InternalError,
+        error instanceof Error ? error.message : 'Unknown error'
       );
     }
   });
-});
 
-// Start the server
-server.listen(MCP_PORT, '0.0.0.0', () => {
-  if (NODE_ENV === 'development') {
-    console.log(`[MCP Server] Starting in ${NODE_ENV} mode`);
-    console.log(`[MCP Server] API Base URL: ${NEXTAUTH_URL}`);
-    console.log(`[MCP Server] Authentication: ${AUTH_TOKEN ? 'Enabled' : 'Disabled'}`);
-    console.log(`[MCP Server] Available tools: ${allTools.length}`);
+  transport.onclose = () => {
+    const sessionId = transport.sessionId;
+    if (sessionId) {
+      console.error(`[MCP] Session closed: ${sessionId}`);
+      sessions.delete(sessionId);
+    }
+  };
+
+  await server.connect(transport);
+  return transport;
+}
+
+async function main() {
+  // Map of active sessions: sessionId → transport
+  const sessions = new Map<string, StreamableHTTPServerTransport>();
+
+  const app = express();
+
+  // CORS — expose mcp-session-id so browser JS can read it from the initialize response
+  app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'mcp-protocol-version', 'mcp-session-id'],
+    exposedHeaders: ['mcp-session-id'],
+  }));
+
+  // Parse JSON bodies — Express hands the result to us via req.body
+  app.use(express.json());
+
+  // ── Health check ──────────────────────────────────────────────────────────
+  app.get('/health', (_req, res) => {
+    res.json({ status: 'ok', sessions: sessions.size });
+  });
+
+  // ── Shared MCP handler (POST + DELETE share the same logic) ───────────────
+  async function handleMcp(req: express.Request, res: express.Response) {
+    try {
+      const sessionId = req.headers['mcp-session-id'] as string | undefined;
+      let transport: StreamableHTTPServerTransport;
+
+      if (sessionId) {
+        // Subsequent request — route to the existing session transport
+        const existing = sessions.get(sessionId);
+        if (!existing) {
+          res.status(404).json({ jsonrpc: '2.0', error: { code: -32000, message: 'Session not found' }, id: null });
+          return;
+        }
+        transport = existing;
+      } else {
+        // No session ID → initialize request; create a new session.
+        // Extract the client's API key and forward it to the backend API client.
+        const authHeader = req.headers['authorization'] as string | undefined;
+        const authToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+        transport = await createSessionTransport(sessions, authToken);
+      }
+
+      // req.body is already parsed by express.json(); pass it as parsedBody
+      await transport.handleRequest(req, res, req.body);
+    } catch (error) {
+      console.error('[MCP] Error handling request:', error instanceof Error ? error.message : error);
+      if (!res.headersSent) {
+        res.status(500).json({ jsonrpc: '2.0', error: { code: -32603, message: 'Internal server error' }, id: null });
+      }
+    }
   }
-  console.log(`[MCP Server] Server running on http://0.0.0.0:${MCP_PORT}`);
-});
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('[MCP Server] SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('[MCP Server] Server closed');
-    process.exit(0);
-  });
-});
+  app.post('/mcp', handleMcp);
+  app.delete('/mcp', handleMcp);
+  // GET /mcp supports SSE streaming (used by some MCP clients)
+  app.get('/mcp', handleMcp);
 
-process.on('SIGINT', () => {
-  console.log('[MCP Server] SIGINT received, shutting down gracefully');
-  server.close(() => {
-    console.log('[MCP Server] Server closed');
-    process.exit(0);
+  app.listen(MCP_PORT, () => {
+    console.error(`[MCP Server] Running on http://localhost:${MCP_PORT}/mcp`);
+    console.error(`[MCP Server] Health: http://localhost:${MCP_PORT}/health`);
   });
-});
+}
+
+main();
 
 

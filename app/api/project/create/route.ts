@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
     try {
         const data = await request.json();
-        const result = await createProject(data);
+        const result = await createProject(data, token.jwt?.userId);
         return NextResponse.json(result, okaResponseStatus);
     } catch (error) {
         console.error('Error creating project:', error);

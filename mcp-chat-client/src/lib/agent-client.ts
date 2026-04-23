@@ -122,18 +122,23 @@ export class AgentClient {
       callbacks.onDone();
     });
 
+    // Named server-sent error events (event: error  data: {...})
     es.addEventListener('error', (e: MessageEvent) => {
+      if (!e.data) return; // ignore — handled by onerror below
       try {
         const d = JSON.parse(e.data) as { message: string };
         callbacks.onError(d.message);
       } catch {
-        callbacks.onError('Connection error');
+        /* malformed payload — onerror will clean up */
       }
     });
 
+    // Connection-level errors and normal stream close without a `done` event.
+    // This is the single authoritative place that calls es.close() and resets
+    // loading state when something goes wrong at the transport layer.
     es.onerror = () => {
       es.close();
-      callbacks.onError('SSE connection failed');
+      callbacks.onError('SSE connection failed or closed unexpectedly');
     };
 
     return () => es.close();

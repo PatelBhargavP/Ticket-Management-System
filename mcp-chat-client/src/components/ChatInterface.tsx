@@ -1,67 +1,78 @@
 import { useState, useRef, useEffect } from 'react';
 import { MCPClient } from '../lib/mcp-client';
-import { NLPParser } from '../lib/nlp-parser';
+import { LLMService } from '../lib/llm-service';
+import type { MCPTool } from '../lib/mcp-client';
+import type { ConversationMessage } from '../lib/llm-service';
 import type { ChatMessage } from '../types/chat';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
 
 interface ChatInterfaceProps {
   mcpClient: MCPClient;
+  geminiApiKey: string;
 }
 
-export default function ChatInterface({ mcpClient }: ChatInterfaceProps) {
+export default function ChatInterface({ mcpClient, geminiApiKey }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const parser = new NLPParser();
+  const [status, setStatus] = useState<string | null>(null);
+  const [tools, setTools] = useState<MCPTool[]>([]);
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Conversation history in Gemini Content format — does not drive rendering.
+  const conversationHistoryRef = useRef<ConversationMessage[]>([]);
+  // Stable LLMService instance for the lifetime of this component.
+  const llmServiceRef = useRef<LLMService>(
+    new LLMService({ apiKey: geminiApiKey }),
+  );
+
+  // Scroll to bottom on new messages.
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Fetch available MCP tools once on mount.
+  useEffect(() => {
+    mcpClient
+      .listTools()
+      .then(({ tools: t }) => setTools(t))
+      .catch((err) => console.error('[ChatInterface] Failed to load tools:', err));
+  }, [mcpClient]);
+
   const handleSend = async (input: string) => {
     if (!input.trim() || isLoading) return;
 
-    // Add user message
+    // Show the user's message immediately.
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
       content: input,
       timestamp: new Date(),
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
+    // Append the user turn in Gemini Content format.
+    conversationHistoryRef.current.push({ role: 'user', parts: [{ text: input }] });
+
     try {
-      // Parse natural language to tool call
-      const command = parser.parse(input);
+      const { response, updatedHistory } = await llmServiceRef.current.chat(
+        conversationHistoryRef.current,
+        tools,
+        (toolName, args) => mcpClient.callTool(toolName, args),
+        setStatus,
+      );
 
-      if (!command) {
-        // If no command matched, show error
-        const errorMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: 'I didn\'t understand that command. Try:\n- "create project called MyProject"\n- "list projects"\n- "create ticket in PROJECT123"',
-          timestamp: new Date(),
-          error: 'Unknown command',
-        };
-        setMessages(prev => [...prev, errorMessage]);
-        setIsLoading(false);
-        return;
-      }
+      // Persist the full updated history (includes tool_use / tool_result turns).
+      conversationHistoryRef.current = updatedHistory;
 
-      // Call the MCP tool
-      const result = await mcpClient.callTool(command.tool, command.args);
-
-      // Format result
-      const resultMessage: ChatMessage = {
+      const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `Executed: ${command.tool}\n\nResult:\n${JSON.stringify(result, null, 2)}`,
+        content: response,
         timestamp: new Date(),
-        toolResult: result,
       };
-      setMessages(prev => [...prev, resultMessage]);
+      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -70,9 +81,10 @@ export default function ChatInterface({ mcpClient }: ChatInterfaceProps) {
         timestamp: new Date(),
         error: error instanceof Error ? error.message : 'Unknown error',
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      setStatus(null);
     }
   };
 
@@ -93,11 +105,12 @@ export default function ChatInterface({ mcpClient }: ChatInterfaceProps) {
         {messages.length === 0 && (
           <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
             <p className="text-lg font-medium mb-2">Welcome!</p>
-            <p>Try commands like:</p>
+            <p>Ask me anything about your projects and tickets:</p>
             <ul className="mt-2 space-y-1 text-sm">
-              <li>"create project called &lt;project name&gt;"</li>
-              <li>"list projects"</li>
-              <li>"create ticket in &lt;project name&gt;"</li>
+              <li>"Show me all my projects"</li>
+              <li>"Create a new project called Redesign"</li>
+              <li>"What tickets are in project ABC?"</li>
+              <li>"Create a high-priority ticket for the login bug"</li>
             </ul>
           </div>
         )}
@@ -106,12 +119,18 @@ export default function ChatInterface({ mcpClient }: ChatInterfaceProps) {
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-200 dark:bg-gray-700 rounded-lg px-4 py-2">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-              </div>
+            <div className="bg-gray-200 dark:bg-gray-700 rounded-lg px-4 py-2 min-w-[120px]">
+              {status ? (
+                <span className="text-sm text-gray-600 dark:text-gray-300 italic">
+                  {status}
+                </span>
+              ) : (
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              )}
             </div>
           </div>
         )}

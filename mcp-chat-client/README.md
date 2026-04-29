@@ -28,6 +28,33 @@ cp .env.example .env
 npm run dev
 ```
 
+## MCP Servers
+
+Use this MCP client configuration to connect to the server in this repo.
+
+```json
+{
+  "mcpServers": {
+    "ticket-management-stdio": {
+      "command": "npm",
+      "args": ["run", "dev"],
+      "env": {
+        "SERVER_NAME": "mcp-server-template",
+        "SERVER_VERSION": "0.1.0",
+        "LOG_LEVEL": "info"
+      }
+    },
+    "ticket-management-http": {
+      "url": "https://<your-domain>/api/mcp"
+    },
+    "ticket-management-stdio-production": {
+      "command": "node",
+      "args": ["dist/index.js"]
+    }
+  }
+}
+```
+
 ## Getting an API Key
 
 The chat client includes instructions on the login screen, but here are the methods:

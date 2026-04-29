@@ -7,12 +7,14 @@ import { IProjectDocument, Project } from "@/models/Project";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
-export async function createProject(data: Partial<IProjectDocument>) {
+export async function createProject(data: Partial<IProjectDocument>, authenticatedUserId?: string) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = authenticatedUserId ? null : await getServerSession(authOptions);
+        const userId = authenticatedUserId || session?.userId;
+
         await dbConnect();
 
-        if (!session?.userId) {
+        if (!userId) {
             throw new Error('User must be authenticated to create projects');
         }
 
@@ -20,11 +22,9 @@ export async function createProject(data: Partial<IProjectDocument>) {
             throw new Error('Cannot create project without name');
         }
 
-        if (session.userId) {
-            data['memberIds'] = [session.userId];
-        }
+        data['memberIds'] = [userId];
 
-        const project = await Project.create({ ...data, updatedById: session.userId, createdById: session.userId });
+        const project = await Project.create({ ...data, updatedById: userId, createdById: userId });
         const populatedProject = await Project.findOne({ _id: project._id })
             .populate('memberIds', appUserAttributes)
             .populate('updatedById', appUserAttributes)

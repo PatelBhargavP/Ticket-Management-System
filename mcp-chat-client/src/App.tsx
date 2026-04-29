@@ -4,8 +4,26 @@ import AuthForm from './components/AuthForm';
 import ChatInterface from './components/ChatInterface';
 
 const MCP_SERVER_URL = import.meta.env.VITE_MCP_SERVER_URL || 'http://localhost:3001/mcp';
+const GEMINI_API_KEY: string = import.meta.env.VITE_GEMINI_API_KEY || '';
 
 function App() {
+  // Guard: VITE_GEMINI_API_KEY must be set in .env before the app can work.
+  if (!GEMINI_API_KEY) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center space-y-3 p-6 text-center">
+        <p className="text-red-600 font-semibold text-lg">VITE_GEMINI_API_KEY is not set.</p>
+        <p className="text-gray-600 dark:text-gray-400 text-sm max-w-md">
+          Create a <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">.env</code> file
+          inside <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">mcp-chat-client/</code> and add:
+        </p>
+        <pre className="bg-gray-100 dark:bg-gray-800 rounded px-4 py-2 text-sm text-left">
+          VITE_GEMINI_API_KEY=AIza...
+        </pre>
+        <p className="text-gray-500 dark:text-gray-500 text-xs">Then restart the dev server.</p>
+      </div>
+    );
+  }
+
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [mcpClient, setMcpClient] = useState<MCPClient | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -86,7 +104,7 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col">
-      <ChatInterface mcpClient={mcpClient} />
+      <ChatInterface mcpClient={mcpClient} geminiApiKey={GEMINI_API_KEY} />
       <button
         onClick={handleLogout}
         className="fixed top-4 right-4 px-4 py-2 bg-gray-600 text-white cursor-pointer rounded-lg hover:bg-gray-700 text-sm z-50"

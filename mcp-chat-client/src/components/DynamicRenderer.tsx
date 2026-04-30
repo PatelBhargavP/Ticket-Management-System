@@ -18,9 +18,26 @@ import {
   Code,
   Tag,
   ChevronRight,
+  HelpCircle,
 } from 'lucide-react';
 import type { UIAction, UIComponent, UISchema } from '../types/chat';
 import { cn } from '../lib/utils';
+
+// ---------------------------------------------------------------------------
+// Utility: safe stringification of any prop value
+// ---------------------------------------------------------------------------
+
+function safeStr(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  // Arrays/objects: use JSON instead of "[object Object]"
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
 
 interface Props {
   schema: UISchema;
@@ -65,7 +82,12 @@ function ListLayout({ children }: { children: React.ReactNode }) {
 // ============================================================================
 
 function ProjectCard({ props }: { props: Record<string, unknown> }) {
-  const status = String(props.status ?? '');
+  // Accept multiple LLM-generated field name variants to be resilient
+  const name = safeStr(props.name ?? props.title ?? props.projectName ?? props.project_name);
+  const status = safeStr(props.status);
+  const identifier = safeStr(props.identifier ?? props.id ?? props.projectId);
+  const description = safeStr(props.description ?? props.summary);
+
   const statusColors: Record<string, string> = {
     active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     archived: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300',
@@ -78,7 +100,7 @@ function ProjectCard({ props }: { props: Record<string, unknown> }) {
         <div className="flex items-center gap-2 min-w-0">
           <FolderOpen className="w-4 h-4 text-blue-500 shrink-0" />
           <span className="font-medium text-gray-900 dark:text-white truncate">
-            {String(props.name ?? 'Untitled')}
+            {name || '(no name)'}
           </span>
         </div>
         {status && (
@@ -92,14 +114,14 @@ function ProjectCard({ props }: { props: Record<string, unknown> }) {
           </span>
         )}
       </div>
-      {props.description && (
+      {description && (
         <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-          {String(props.description)}
+          {description}
         </p>
       )}
-      {props.identifier && (
+      {identifier && (
         <p className="mt-2 text-xs font-mono text-gray-400 dark:text-gray-500">
-          #{String(props.identifier)}
+          #{identifier}
         </p>
       )}
     </div>
@@ -107,12 +129,17 @@ function ProjectCard({ props }: { props: Record<string, unknown> }) {
 }
 
 function TicketCard({ props }: { props: Record<string, unknown> }) {
-  const priority = String(props.priority ?? '');
+  // Accept multiple LLM-generated field name variants
+  const name     = safeStr(props.name ?? props.title ?? props.ticketName ?? props.ticket_name);
+  const priority = safeStr(props.priority ?? props.priorityName ?? props.priority_name);
+  const status   = safeStr(props.status   ?? props.statusName   ?? props.status_name);
+  const description = safeStr(props.description ?? props.summary ?? props.body);
+
   const priorityColors: Record<string, string> = {
     urgent: 'text-red-600 dark:text-red-400',
-    high: 'text-orange-500 dark:text-orange-400',
+    high:   'text-orange-500 dark:text-orange-400',
     medium: 'text-yellow-600 dark:text-yellow-400',
-    low: 'text-green-600 dark:text-green-400',
+    low:    'text-green-600 dark:text-green-400',
   };
 
   return (
@@ -121,17 +148,17 @@ function TicketCard({ props }: { props: Record<string, unknown> }) {
         <Ticket className="w-4 h-4 text-purple-500 mt-0.5 shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="font-medium text-gray-900 dark:text-white truncate">
-            {String(props.name ?? 'Untitled Ticket')}
+            {name || '(no name)'}
           </p>
-          {props.description && (
+          {description && (
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-              {String(props.description)}
+              {description}
             </p>
           )}
           <div className="mt-2 flex flex-wrap gap-2">
-            {props.status && (
+            {status && (
               <span className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
-                {String(props.status)}
+                {status}
               </span>
             )}
             {priority && (
@@ -191,12 +218,12 @@ function BadgeComponent({ props }: { props: Record<string, unknown> }) {
     yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
     gray: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
   };
-  const color = String(props.color ?? 'gray');
+  const color = safeStr(props.color) || 'gray';
 
   return (
     <span className={cn('inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium', colorMap[color] ?? colorMap.gray)}>
       <Tag className="w-3 h-3" />
-      {String(props.label ?? '')}
+      {safeStr(props.label)}
     </span>
   );
 }
@@ -205,13 +232,13 @@ function StatComponent({ props }: { props: Record<string, unknown> }) {
   return (
     <div className="rounded-lg bg-gray-50 dark:bg-gray-700/50 px-4 py-3">
       <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-        {String(props.label ?? '')}
+        {safeStr(props.label)}
       </p>
       <p className="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
-        {String(props.value ?? '')}
+        {safeStr(props.value)}
       </p>
       {props.sub && (
-        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{String(props.sub)}</p>
+        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{safeStr(props.sub)}</p>
       )}
     </div>
   );
@@ -224,16 +251,16 @@ function ListItemComponent({ props }: { props: Record<string, unknown> }) {
         <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
         <div className="min-w-0">
           <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-            {String(props.title ?? props.name ?? '')}
+            {safeStr(props.title ?? props.name)}
           </p>
           {props.subtitle && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{String(props.subtitle)}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{safeStr(props.subtitle)}</p>
           )}
         </div>
       </div>
       {props.badge && (
         <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full shrink-0 ml-2">
-          {String(props.badge)}
+          {safeStr(props.badge)}
         </span>
       )}
     </div>
@@ -241,15 +268,19 @@ function ListItemComponent({ props }: { props: Record<string, unknown> }) {
 }
 
 function KanbanColumn({ props }: { props: Record<string, unknown> }) {
-  const items = (props.items as string[]) ?? [];
+  // items can be strings or objects — normalise to string labels
+  const rawItems = Array.isArray(props.items) ? (props.items as unknown[]) : [];
+  const items = rawItems.map(item =>
+    typeof item === 'string' ? item : safeStr(item)
+  );
 
   return (
-    <div className="min-w-[180px] rounded-lg bg-gray-50 dark:bg-gray-700/50 p-3">
+    <div className="min-w-[200px] max-w-[240px] rounded-lg bg-gray-50 dark:bg-gray-700/50 p-3">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-          {String(props.name ?? props.title ?? 'Column')}
+        <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide truncate">
+          {safeStr(props.name ?? props.title) || 'Column'}
         </p>
-        <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-full px-1.5 py-0.5">
+        <span className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-full px-1.5 py-0.5 shrink-0 ml-1">
           {items.length}
         </span>
       </div>
@@ -259,7 +290,7 @@ function KanbanColumn({ props }: { props: Record<string, unknown> }) {
             key={i}
             className="rounded bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 px-2 py-1.5 text-xs text-gray-700 dark:text-gray-300"
           >
-            {String(item)}
+            {item}
           </div>
         ))}
         {items.length === 0 && (
@@ -279,16 +310,16 @@ function SuccessBanner({ props }: { props: Record<string, unknown> }) {
         <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
         <div>
           <p className="font-medium text-green-800 dark:text-green-200">
-            {String(props.message ?? 'Done!')}
+            {safeStr(props.message) || 'Done!'}
           </p>
           {props.detail && (
             <p className="mt-1 text-sm text-green-700 dark:text-green-300">
-              {String(props.detail)}
+              {safeStr(props.detail)}
             </p>
           )}
           {props.id && (
             <p className="mt-1 text-xs font-mono text-green-600 dark:text-green-400">
-              ID: {String(props.id)}
+              ID: {safeStr(props.id)}
             </p>
           )}
         </div>
@@ -304,10 +335,10 @@ function ErrorBanner({ props }: { props: Record<string, unknown> }) {
         <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
         <div>
           <p className="font-medium text-red-800 dark:text-red-200">
-            {String(props.message ?? 'An error occurred')}
+            {safeStr(props.message) || 'An error occurred'}
           </p>
           {props.detail && (
-            <p className="mt-1 text-sm text-red-700 dark:text-red-300">{String(props.detail)}</p>
+            <p className="mt-1 text-sm text-red-700 dark:text-red-300">{safeStr(props.detail)}</p>
           )}
         </div>
       </div>
@@ -320,12 +351,46 @@ function JsonViewer({ props }: { props: Record<string, unknown> }) {
     <details className="mt-1">
       <summary className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none">
         <Code className="w-3.5 h-3.5" />
-        {String(props.label ?? 'Raw data')}
+        {safeStr(props.label) || 'Raw data'}
       </summary>
-      <pre className="mt-2 text-xs bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 p-3 rounded overflow-x-auto">
+      <pre className="mt-2 text-xs bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 p-3 rounded overflow-x-auto max-h-60">
         {JSON.stringify(props.data, null, 2)}
       </pre>
     </details>
+  );
+}
+
+/** Renders a plain text/markdown block */
+function TextComponent({ props }: { props: Record<string, unknown> }) {
+  return (
+    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+      {safeStr(props.text ?? props.content ?? props.value)}
+    </p>
+  );
+}
+
+/** Catch-all for unknown component types — renders all props as a tidy list */
+function UnknownComponent({ component }: { component: UIComponent }) {
+  const entries = Object.entries(component.props).filter(([, v]) => v !== null && v !== undefined);
+  return (
+    <div className="rounded border border-dashed border-gray-300 dark:border-gray-600 px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex items-center gap-1.5 mb-1.5 opacity-60">
+        <HelpCircle className="w-3 h-3" />
+        <span className="font-mono">{component.type}</span>
+      </div>
+      {entries.length > 0 ? (
+        <dl className="space-y-0.5">
+          {entries.map(([k, v]) => (
+            <div key={k} className="flex gap-1.5">
+              <dt className="font-medium shrink-0">{k}:</dt>
+              <dd className="truncate">{safeStr(v)}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <span className="italic">No data</span>
+      )}
+    </div>
   );
 }
 
@@ -341,17 +406,20 @@ function renderComponent(
   const key = `${type}-${index}`;
 
   switch (type) {
-    case 'card':         return <ProjectCard key={key} props={props} />;
-    case 'ticket-card':  return <TicketCard key={key} props={props} />;
-    case 'table':        return <TableComponent key={key} props={props} />;
-    case 'badge':        return <BadgeComponent key={key} props={props} />;
-    case 'stat':         return <StatComponent key={key} props={props} />;
-    case 'list-item':    return <ListItemComponent key={key} props={props} />;
-    case 'kanban-column': return <KanbanColumn key={key} props={props} />;
+    case 'card':           return <ProjectCard key={key} props={props} />;
+    case 'ticket-card':    return <TicketCard key={key} props={props} />;
+    case 'table':          return <TableComponent key={key} props={props} />;
+    case 'badge':          return <BadgeComponent key={key} props={props} />;
+    case 'stat':           return <StatComponent key={key} props={props} />;
+    case 'list-item':      return <ListItemComponent key={key} props={props} />;
+    case 'kanban-column':  return <KanbanColumn key={key} props={props} />;
     case 'success-banner': return <SuccessBanner key={key} props={props} />;
-    case 'error-banner': return <ErrorBanner key={key} props={props} />;
-    case 'json-viewer':  return <JsonViewer key={key} props={props} />;
-    default:             return null;
+    case 'error-banner':   return <ErrorBanner key={key} props={props} />;
+    case 'json-viewer':    return <JsonViewer key={key} props={props} />;
+    case 'text':           return <TextComponent key={key} props={props} />;
+    default:
+      // Render unknown component types gracefully instead of silently dropping them
+      return <UnknownComponent key={key} component={component} />;
   }
 }
 
@@ -392,7 +460,8 @@ function ActionButton({
 
 function renderLayout(schema: UISchema, onAction?: Props['onAction']): React.ReactNode {
   const { layout, components } = schema;
-  const rendered = components.map(renderComponent);
+  // components array is already normalised to [] by the caller
+  const rendered = (components ?? []).map(renderComponent);
 
   switch (layout) {
     case 'card-grid':
@@ -445,37 +514,53 @@ function renderLayout(schema: UISchema, onAction?: Props['onAction']): React.Rea
 // ============================================================================
 
 export default function DynamicRenderer({ schema, onAction }: Props) {
+  // Defensive guard — should never be null/undefined but guard just in case
+  if (!schema) return null;
+
+  // Normalise potentially missing arrays to avoid map-on-undefined crashes
+  const safeSchema: UISchema = {
+    ...schema,
+    components: Array.isArray(schema.components) ? schema.components : [],
+    actions:    Array.isArray(schema.actions)    ? schema.actions    : [],
+    metadata:   schema.metadata ?? {},
+    data:       schema.data ?? {},
+  };
+
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="mb-1">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">
-          {schema.title}
-        </h3>
-        {schema.subtitle && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            {schema.subtitle}
-          </p>
-        )}
-      </div>
+      {(safeSchema.title || safeSchema.subtitle) && (
+        <div className="mb-1">
+          {safeSchema.title && (
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">
+              {safeSchema.title}
+            </h3>
+          )}
+          {safeSchema.subtitle && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {safeSchema.subtitle}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Components */}
-      {renderLayout(schema, onAction)}
+      {renderLayout(safeSchema, onAction)}
 
       {/* Action buttons */}
-      {schema.actions && schema.actions.length > 0 && (
+      {safeSchema.actions.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-3">
-          {schema.actions.map((action, i) => (
+          {safeSchema.actions.map((action, i) => (
             <ActionButton key={i} action={action} onAction={onAction} />
           ))}
         </div>
       )}
 
       {/* Metadata */}
-      {schema.metadata && Object.keys(schema.metadata).length > 0 && (
+      {Object.keys(safeSchema.metadata).length > 0 && (
         <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
-          {Object.entries(schema.metadata)
-            .map(([k, v]) => `${k}: ${v}`)
+          {Object.entries(safeSchema.metadata)
+            .map(([k, v]) => `${k}: ${safeStr(v)}`)
             .join(' · ')}
         </p>
       )}

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { AlertCircle, CheckCircle, RefreshCw, Loader2 } from 'lucide-react';
 import type { AgentLog, ChatMessage, UISchema } from '../types/chat';
 import { AgentClient, makeLog } from '../lib/agent-client';
 import MessageBubble from './MessageBubble';
@@ -21,14 +22,35 @@ function makeId() {
 }
 
 // ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+type ServerStatus = 'checking' | 'online' | 'offline';
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export default function ChatInterface({ agentClient, apiKey, mcpUrl }: ChatInterfaceProps) {
-  const [messages, setMessages]   = useState<ChatMessage[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages]       = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading]     = useState(false);
+  const [serverStatus, setServerStatus] = useState<ServerStatus>('checking');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<(() => void) | null>(null);
+
+  // Agent server health check
+  const checkServer = useCallback(async () => {
+    setServerStatus('checking');
+    const ok = await agentClient.ping();
+    setServerStatus(ok ? 'online' : 'offline');
+  }, [agentClient]);
+
+  useEffect(() => {
+    checkServer();
+    // Re-check every 30 s while the tab is visible
+    const interval = setInterval(checkServer, 30_000);
+    return () => clearInterval(interval);
+  }, [checkServer]);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -135,7 +157,12 @@ export default function ChatInterface({ agentClient, apiKey, mcpUrl }: ChatInter
             }));
           },
 
-          onToken(text, _agent) {
+          onToken(text, agent) {
+            // Suppress tokens from the ui_renderer node — those are raw JSON
+            // schema fragments that will be displayed via DynamicRenderer once
+            // the ui_schema SSE event arrives.  Showing them as plain text
+            // produces unreadable JSON noise in the chat bubble.
+            if (agent === 'ui_renderer') return;
             updateAssistantMsg(assistantId, m => ({
               ...m,
               content: m.content + text,
@@ -173,12 +200,52 @@ export default function ChatInterface({ agentClient, apiKey, mcpUrl }: ChatInter
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-          Generative UI Chat
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Powered by LangGraph agents · Ticket Management System
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Generative UI Chat
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Powered by LangGraph agents · Ticket Management System
+            </p>
+          </div>
+          {/* Server status indicator */}
+          <div className="flex items-center gap-1.5">
+            {serverStatus === 'checking' && (
+              <span className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                Connecting…
+              </span>
+            )}
+            {serverStatus === 'online' && (
+              <span className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
+                <CheckCircle className="w-3.5 h-3.5" />
+                Agent server online
+              </span>
+            )}
+            {serverStatus === 'offline' && (
+              <button
+                onClick={checkServer}
+                className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+              >
+                <AlertCircle className="w-3.5 h-3.5" />
+                Agent server offline
+                <RefreshCw className="w-3 h-3 ml-0.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Offline warning banner */}
+        {serverStatus === 'offline' && (
+          <div className="mt-2 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+            ⚠️ The agent server at <code className="font-mono text-xs">{agentClient['serverUrl']}</code> is unreachable.
+            Make sure the Python server is running (<code className="font-mono text-xs">uvicorn main:app</code>) then{' '}
+            <button onClick={checkServer} className="underline hover:no-underline font-medium">
+              retry
+            </button>.
+          </div>
+        )}
       </div>
 
       {/* Messages */}
@@ -206,11 +273,12 @@ export default function ChatInterface({ agentClient, apiKey, mcpUrl }: ChatInter
           </div>
         )}
 
-        {messages.map(message => (
+        {messages.map((message, idx) => (
           <MessageBubble
             key={message.id}
             message={message}
             onAction={handleAction}
+            isLoading={isLoading && idx === messages.length - 1}
           />
         ))}
 
@@ -236,7 +304,17 @@ export default function ChatInterface({ agentClient, apiKey, mcpUrl }: ChatInter
 
       {/* Input */}
       <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-4">
-        <MessageInput onSend={handleSend} disabled={isLoading} />
+        <MessageInput
+          onSend={handleSend}
+          disabled={isLoading || serverStatus === 'offline'}
+          placeholder={
+            serverStatus === 'offline'
+              ? 'Agent server offline — cannot send messages'
+              : serverStatus === 'checking'
+              ? 'Connecting to agent server…'
+              : 'Ask anything about your projects or tickets…'
+          }
+        />
       </div>
     </div>
   );

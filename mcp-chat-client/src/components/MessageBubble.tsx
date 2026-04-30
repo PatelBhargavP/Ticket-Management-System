@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Cpu, Wrench, Layers } from 'lucide-react';
+import { ChevronDown, ChevronRight, Cpu, Wrench, Layers, AlertCircle } from 'lucide-react';
 import type { AgentLog, ChatMessage } from '../types/chat';
 import { cn } from '../lib/utils';
 import DynamicRenderer from './DynamicRenderer';
@@ -8,6 +8,19 @@ interface MessageBubbleProps {
   message: ChatMessage;
   /** Forward action clicks to the parent so it can trigger a new agent call */
   onAction?: (tool: string, args: Record<string, unknown>) => void;
+  /** Whether the message is still streaming (prevents showing blank bubbles) */
+  isLoading?: boolean;
+}
+
+/**
+ * Returns true if a string looks like raw JSON output from the ui_renderer
+ * node — e.g. starts with `{` or `[` after trimming.  Used to suppress JSON
+ * noise in the plain-text fallback path.
+ */
+function isJsonLike(text: string): boolean {
+  const t = text.trim();
+  if (!t) return false;
+  return (t.startsWith('{') || t.startsWith('[')) && t.length > 2;
 }
 
 // ---------------------------------------------------------------------------
@@ -92,9 +105,81 @@ function AgentTrace({ logs }: { logs: AgentLog[] }) {
 // Main component
 // ---------------------------------------------------------------------------
 
-export default function MessageBubble({ message, onAction }: MessageBubbleProps) {
+export default function MessageBubble({ message, onAction, isLoading }: MessageBubbleProps) {
   const isUser  = message.role === 'user';
   const isError = !!message.error;
+
+  // Determine the primary body to render for assistant messages
+  function renderAssistantBody() {
+    // 1. UI schema — highest priority, full generative render
+    if (message.uiSchema) {
+      return <DynamicRenderer schema={message.uiSchema} onAction={onAction} />;
+    }
+
+    // 2. Error state — show a styled error banner
+    if (isError) {
+      return (
+        <div className="flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+          <p className="text-sm">{message.error}</p>
+        </div>
+      );
+    }
+
+    // 3. JSON-like content (leaked ui_renderer tokens) — show a "Generating UI" pill
+    //    while still streaming; hide it once done (the ui_schema event missed/never came)
+    if (isJsonLike(message.content)) {
+      if (isLoading) {
+        return (
+          <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 italic">
+            <span className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse" />
+            Generating UI…
+          </div>
+        );
+      }
+      // Stream done but ui_schema never arrived — show a json-viewer as fallback
+      return (
+        <details>
+          <summary className="text-sm text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200">
+            Response (raw)
+          </summary>
+          <pre className="mt-2 text-xs bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 p-3 rounded overflow-x-auto max-h-60">
+            {message.content}
+          </pre>
+        </details>
+      );
+    }
+
+    // 4. Plain text content
+    if (message.content.trim()) {
+      return (
+        <div className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</div>
+      );
+    }
+
+    // 5. Empty content while streaming (agent is thinking, before first token)
+    if (isLoading) {
+      return (
+        <div className="flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 italic">
+          <span className="inline-block w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+          <span className="inline-block w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
+          <span className="inline-block w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+        </div>
+      );
+    }
+
+    // 6. Truly empty completed message — show nothing rather than blank bubble
+    return null;
+  }
+
+  const body = renderAssistantBody();
+  const hasLogs = !isUser && (message.agentLogs?.length ?? 0) > 0;
+  const hasLegacyResult = !isUser && !message.uiSchema && message.toolResult;
+
+  // Skip rendering an empty assistant bubble altogether (edge case: stream error, nothing came through)
+  if (!isUser && !isLoading && body === null && !hasLogs && !hasLegacyResult) {
+    return null;
+  }
 
   return (
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
@@ -104,40 +189,30 @@ export default function MessageBubble({ message, onAction }: MessageBubbleProps)
           isUser
             ? 'max-w-[75%] bg-blue-600 text-white'
             : isError
-            ? 'max-w-[85%] bg-red-100 dark:bg-red-900 text-red-900 dark:text-red-100'
+            ? 'max-w-[85%] bg-red-50 dark:bg-red-900/30 text-red-900 dark:text-red-100 border border-red-200 dark:border-red-800'
             : 'w-full max-w-[85%] bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
         )}
       >
-        {/* Dynamic UI rendering — takes precedence over plain text */}
-        {!isUser && message.uiSchema ? (
-          <DynamicRenderer schema={message.uiSchema} onAction={onAction} />
-        ) : (
+        {isUser ? (
           <div className="whitespace-pre-wrap text-sm">{message.content}</div>
-        )}
-
-        {/* Show streamed text below the UI schema if both exist */}
-        {!isUser && message.uiSchema && message.content && (
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-2">
-            {message.content}
-          </p>
+        ) : (
+          body
         )}
 
         {/* Agent trace (collapsible) */}
-        {!isUser && message.agentLogs && message.agentLogs.length > 0 && (
-          <AgentTrace logs={message.agentLogs} />
-        )}
+        {hasLogs && <AgentTrace logs={message.agentLogs!} />}
 
         {/* Legacy tool result viewer (backward compat) */}
-        {!isUser && !message.uiSchema && message.toolResult && (
+        {hasLegacyResult && (
           <details className="mt-2">
             <summary className="text-xs opacity-75 cursor-pointer">View details</summary>
-            <pre className="mt-2 text-xs overflow-x-auto bg-gray-100 dark:bg-gray-900 p-2 rounded">
+            <pre className="mt-2 text-xs overflow-x-auto bg-gray-100 dark:bg-gray-900 p-2 rounded max-h-40">
               {JSON.stringify(message.toolResult, null, 2)}
             </pre>
           </details>
         )}
 
-        <div className="text-xs opacity-60 mt-1.5 text-right">
+        <div className="text-xs opacity-50 mt-1.5 text-right">
           {message.timestamp.toLocaleTimeString()}
         </div>
       </div>

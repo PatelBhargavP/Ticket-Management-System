@@ -4,7 +4,8 @@ import { okaResponseStatus } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-    // Parse for the user id
+    // Parse for the user id — supports both NextAuth session cookies and
+    // Bearer API-key tokens sent by the MCP server.
     const token = await tokenParser(request);
     if (token.errorRes) {
         // Return 401 Unauthorized when token parsing fails
@@ -13,7 +14,10 @@ export async function POST(request: NextRequest) {
 
     try {
         const data = await request.json();
-        const result = await createProject(data);
+        // Forward the resolved userId so createProject doesn't have to call
+        // getServerSession() again (which would fail for Bearer-token requests
+        // because there is no session cookie).
+        const result = await createProject(data, token.jwt?.userId);
         return NextResponse.json(result, okaResponseStatus);
     } catch (error) {
         console.error('Error creating project:', error);

@@ -5,9 +5,10 @@ import { cn } from '../lib/utils';
 interface MessageInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
+  placeholder?: string;
 }
 
-export default function MessageInput({ onSend, disabled }: MessageInputProps) {
+export default function MessageInput({ onSend, disabled, placeholder }: MessageInputProps) {
   const [input, setInput] = useState('');
 
   const handleSubmit = () => {
@@ -30,7 +31,7 @@ export default function MessageInput({ onSend, disabled }: MessageInputProps) {
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyPress={handleKeyPress}
-        placeholder="Type your command..."
+        placeholder={placeholder ?? 'Ask anything about your projects or tickets…'}
         disabled={disabled}
         rows={1}
         className={cn(

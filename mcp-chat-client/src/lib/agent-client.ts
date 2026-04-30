@@ -37,7 +37,7 @@ export interface AgentStreamCallbacks {
 // ---------------------------------------------------------------------------
 
 export class AgentClient {
-  private readonly serverUrl: string;
+  readonly serverUrl: string;
 
   constructor(serverUrl: string) {
     this.serverUrl = serverUrl.replace(/\/$/, '');

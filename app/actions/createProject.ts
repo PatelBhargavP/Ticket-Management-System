@@ -7,12 +7,32 @@ import { IProjectDocument, Project } from "@/models/Project";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
-export async function createProject(data: Partial<IProjectDocument>) {
+/**
+ * Create a new project.
+ *
+ * @param data        - Project fields (name is required).
+ * @param callerUserId - Optional userId pre-extracted from an API-key Bearer
+ *                       token by the calling route handler.  When provided it
+ *                       takes precedence over the NextAuth session so that MCP
+ *                       / programmatic callers (which have no session cookie)
+ *                       can still create projects.
+ */
+export async function createProject(
+    data: Partial<IProjectDocument>,
+    callerUserId?: string,
+) {
     try {
-        const session = await getServerSession(authOptions);
         await dbConnect();
 
-        if (!session?.userId) {
+        // Resolve userId: prefer an explicitly-supplied value (API-key auth),
+        // then fall back to the NextAuth session (browser auth).
+        let effectiveUserId = callerUserId;
+        if (!effectiveUserId) {
+            const session = await getServerSession(authOptions);
+            effectiveUserId = session?.userId;
+        }
+
+        if (!effectiveUserId) {
             throw new Error('User must be authenticated to create projects');
         }
 
@@ -20,11 +40,9 @@ export async function createProject(data: Partial<IProjectDocument>) {
             throw new Error('Cannot create project without name');
         }
 
-        if (session.userId) {
-            data['memberIds'] = [session.userId];
-        }
+        data['memberIds'] = [effectiveUserId];
 
-        const project = await Project.create({ ...data, updatedById: session.userId, createdById: session.userId });
+        const project = await Project.create({ ...data, updatedById: effectiveUserId, createdById: effectiveUserId });
         const populatedProject = await Project.findOne({ _id: project._id })
             .populate('memberIds', appUserAttributes)
             .populate('updatedById', appUserAttributes)

@@ -13,7 +13,7 @@ const AGENT_SERVER_URL =
 
 // Ticket Management System MCP server (forwarded to the Python server)
 const MCP_SERVER_URL =
-  import.meta.env.VITE_MCP_SERVER_URL || 'http://localhost:3000/api/mcp';
+  import.meta.env.VITE_MCP_SERVER_URL || 'http://localhost:8001/mcp';
 
 // Singleton client — recreated only when serverUrl changes
 const agentClient = new AgentClient(AGENT_SERVER_URL);

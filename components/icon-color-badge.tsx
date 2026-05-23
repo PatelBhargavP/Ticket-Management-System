@@ -6,19 +6,26 @@ import { IPriority } from '@/models/Priority'
 import { cn } from '@/lib/utils'
 
 interface IconBadgeProps {
-    entity: IStatus | IPriority;
+    entity: IStatus | IPriority | null | undefined;
     badgeClass?: string;
     textClass?: string;
 }
 export default function IconColorBadge({ entity, badgeClass, textClass }: IconBadgeProps ) {
-    return (
+    if (!entity) {
+        return (
+            <Badge variant="secondary" className={"text-sm" + (badgeClass || '')}>
+                <span className={textClass || ''}>—</span>
+            </Badge>
+        )
+    }
 
+    return (
         <Badge
             variant="secondary"
-            className={"text-sm" + (badgeClass || '')} 
+            className={"text-sm" + (badgeClass || '')}
             style={{
-                color: entity.color,
-                backgroundColor: `${entity.color}20`, // add 20 for ~12% opacity
+                color: entity.color || undefined,
+                backgroundColor: entity.color ? `${entity.color}20` : undefined, // add 20 for ~12% opacity
             }}
         >
             <DynamicIcon iconName={entity.icon} />

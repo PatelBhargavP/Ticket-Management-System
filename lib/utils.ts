@@ -44,6 +44,15 @@ export function castProjectDocumentToDetails(project: IProjectDocument) {
 }
 
 export function castTicketDocumentToDetails(ticket: ITicketDocument) {
+  // statusId / priorityId may be null when the referenced document was deleted
+  // (Mongoose populate returns null for unresolved refs)
+  const status = (ticket.statusId && typeof ticket.statusId === 'object' && 'name' in ticket.statusId)
+    ? ticket.statusId as IStatus
+    : null;
+  const priority = (ticket.priorityId && typeof ticket.priorityId === 'object' && 'name' in ticket.priorityId)
+    ? ticket.priorityId as IPriority
+    : null;
+
   const projectDetails = {
     ticketId: ticket.id || ticket._id.toString(),
     name: ticket.name,
@@ -52,8 +61,8 @@ export function castTicketDocumentToDetails(ticket: ITicketDocument) {
     createdAt: ticket.createdAt.toString(),
     updatedAt: ticket.updatedAt.toString(),
     assignee: ticket.assigneeIds as IAppUser[],
-    status: ticket.statusId as IStatus,
-    priority: ticket.priorityId as IPriority,
+    status: status as IStatus,
+    priority: priority as IPriority,
     project: ticket.projectId as IProjectBase,
     createdBy: ticket.createdById as IAppUser,
     updatedBy: ticket.updatedById as IAppUser

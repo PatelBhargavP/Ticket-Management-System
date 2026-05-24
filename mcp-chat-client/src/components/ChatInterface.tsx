@@ -36,7 +36,9 @@ export default function ChatInterface({ agentClient, apiKey, mcpUrl }: ChatInter
   const [isLoading, setIsLoading]     = useState(false);
   const [serverStatus, setServerStatus] = useState<ServerStatus>('checking');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const abortRef = useRef<(() => void) | null>(null);
+  const abortRef    = useRef<(() => void) | null>(null);
+  /** Active LangGraph session id — persisted across turns for multi-turn context. */
+  const sessionIdRef = useRef<string | null>(null);
 
   // Agent server health check
   const checkServer = useCallback(async () => {
@@ -57,8 +59,34 @@ export default function ChatInterface({ agentClient, apiKey, mcpUrl }: ChatInter
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount — abort any in-flight SSE stream
   useEffect(() => () => { abortRef.current?.(); }, []);
+
+  // Notify the server when the user closes / navigates away so it can free
+  // the in-process LangGraph checkpoint memory immediately.
+  useEffect(() => {
+    const onUnload = () => {
+      if (sessionIdRef.current) {
+        navigator.sendBeacon(
+          `${agentClient.serverUrl}/chat/session/${sessionIdRef.current}/close`,
+        );
+      }
+    };
+    window.addEventListener('beforeunload', onUnload);
+    return () => window.removeEventListener('beforeunload', onUnload);
+  }, [agentClient]);
+
+  // "New Chat" — close the current session and reset UI state
+  const handleNewChat = useCallback(() => {
+    abortRef.current?.();
+    abortRef.current = null;
+    if (sessionIdRef.current) {
+      agentClient.closeSession(sessionIdRef.current);
+      sessionIdRef.current = null;
+    }
+    setMessages([]);
+    setIsLoading(false);
+  }, [agentClient]);
 
   // ---------------------------------------------------------------------------
   // Message mutation helpers
@@ -130,6 +158,12 @@ export default function ChatInterface({ agentClient, apiKey, mcpUrl }: ChatInter
         input,
         apiKey,
         {
+          onSession(id) {
+            // Capture (or refresh) the session id returned by the server.
+            // Every subsequent message passes this back to restore context.
+            sessionIdRef.current = id;
+          },
+
           onThinking(agent, message) {
             appendLog(makeLog('thinking', { agent, message }));
           },
@@ -185,6 +219,7 @@ export default function ChatInterface({ agentClient, apiKey, mcpUrl }: ChatInter
           },
         },
         mcpUrl,
+        sessionIdRef.current ?? undefined,  // resume existing session if present
       );
 
       abortRef.current = abort;
@@ -209,6 +244,15 @@ export default function ChatInterface({ agentClient, apiKey, mcpUrl }: ChatInter
               Powered by LangGraph agents · Ticket Management System
             </p>
           </div>
+          {/* New Chat button */}
+          <button
+            onClick={handleNewChat}
+            disabled={isLoading}
+            className="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            New Chat
+          </button>
+
           {/* Server status indicator */}
           <div className="flex items-center gap-1.5">
             {serverStatus === 'checking' && (

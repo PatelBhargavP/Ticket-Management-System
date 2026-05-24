@@ -21,6 +21,9 @@ import type { AgentLog, UISchema } from '../types/chat';
 // ---------------------------------------------------------------------------
 
 export interface AgentStreamCallbacks {
+  /** Fired with the active session_id as the very first SSE event. Store and
+   *  re-send this id on the next streamChat call to resume conversation context. */
+  onSession: (sessionId: string) => void;
   onThinking: (agent: string, message: string) => void;
   onToolSelected: (tool: string, args: Record<string, unknown>, reasoning: string) => void;
   onToolExecuting: (tool: string) => void;
@@ -45,6 +48,10 @@ export class AgentClient {
 
   /**
    * Open an SSE connection to /chat/stream, parse events, and fire callbacks.
+   *
+   * @param sessionId - Pass the id received from a prior `onSession` callback to
+   *   resume multi-turn context.  Omit (or pass undefined) to start a new session.
+   *
    * Returns a cleanup function that aborts the connection.
    */
   streamChat(
@@ -52,17 +59,28 @@ export class AgentClient {
     apiKey: string,
     callbacks: AgentStreamCallbacks,
     mcpUrl?: string,
+    sessionId?: string,
   ): () => void {
     const params = new URLSearchParams({
       query,
       api_key: apiKey,
-      ...(mcpUrl ? { mcp_url: mcpUrl } : {}),
+      ...(mcpUrl    ? { mcp_url:    mcpUrl    } : {}),
+      ...(sessionId ? { session_id: sessionId } : {}),
     });
 
     const url = `${this.serverUrl}/chat/stream?${params.toString()}`;
     const es = new EventSource(url);
 
     // ── Event listeners ──────────────────────────────────────────────────
+
+    // The server always emits this as the very first event.
+    // Capture the id and pass it back on the next call to resume context.
+    es.addEventListener('session', (e: MessageEvent) => {
+      try {
+        const d = JSON.parse(e.data) as { session_id: string };
+        callbacks.onSession(d.session_id);
+      } catch { /* ignore parse errors */ }
+    });
 
     es.addEventListener('agent_thinking', (e: MessageEvent) => {
       try {
@@ -142,6 +160,21 @@ export class AgentClient {
     };
 
     return () => es.close();
+  }
+
+  /**
+   * Explicitly close a session on the agent server.
+   *
+   * This frees the in-process LangGraph checkpointer memory immediately rather
+   * than waiting for the idle-timeout sweep.  Call it on "New Chat" and via
+   * navigator.sendBeacon in the beforeunload handler.
+   *
+   * Fire-and-forget — errors are swallowed so callers never need to await.
+   */
+  closeSession(sessionId: string): void {
+    fetch(`${this.serverUrl}/chat/session/${sessionId}/close`, {
+      method: 'POST',
+    }).catch(() => { /* best-effort; ignore network failures */ });
   }
 
   /** Health-check the agent server. */

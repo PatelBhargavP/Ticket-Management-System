@@ -1,6 +1,6 @@
 "use client";
 
-import { GroupedData, GroupingType } from '@/models'
+import { GroupingType } from '@/models'
 import { IPriority } from '@/models/Priority'
 import { IStatus } from '@/models/Status'
 import { ITicketDetails } from '@/models/Ticket'
@@ -14,7 +14,6 @@ import { cva } from 'class-variance-authority'
 import { Button } from './ui/button'
 import { GripVertical } from 'lucide-react'
 import { useDndContext } from '@dnd-kit/core';
-import { Card, CardHeader, CardTitle } from './ui/card';
 import { IBoardColum } from './ticket-kanban-board';
 
 interface IKanbanBoardColumnProps {
@@ -44,7 +43,6 @@ export default function KanbanBoardColumn({
 
     const {
         setNodeRef,
-        active,
         attributes,
         listeners,
         transform,

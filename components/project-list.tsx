@@ -2,7 +2,7 @@
 
 import { IProjectDetails } from "@/models/Project";
 import { Button } from "./ui/button";
-import { use, useEffect, useState } from "react";
+import { use, useMemo, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import ProjectEdit from "./project-edit";
@@ -23,22 +23,16 @@ export default function ProjectList(
     const [openSheet, setOpenSheet] = useState(false);
     const [filterValue, setFilterValue] = useState('');
     const [selectedItem, setSelectedItem] = useState<IProjectDetails | null>(null);
-    const [filteredList, setFilteredList] = useState(projects);
     const router = useRouter();
 
-    useEffect(() => {
-        handleFilter(filterValue); // Reset filter when props change
-    }, [projects]);
-
-    const handleFilter = (filterValue: string) => {
+    const filteredList = useMemo(() => {
         if (!filterValue) {
-            return setFilteredList(projects);
+            return projects;
         }
-        const filtered = projects.filter((item) =>
+        return projects.filter((item) =>
             item.name.toLowerCase().includes(filterValue.toLowerCase())
         );
-        setFilteredList(filtered);
-    };
+    }, [filterValue, projects]);
 
     const handleRowClick = (item: IProjectDetails) => {
         router.push(`/projects/${item.identifier}/list`);
@@ -67,11 +61,11 @@ export default function ProjectList(
         <div className="inline-flex w-fit">
             <Input
                 value={filterValue}
-                onChange={(e) => { setFilterValue(e.target.value); handleFilter(e.target.value); }}
+                onChange={(e) => { setFilterValue(e.target.value); }}
                 placeholder="Filter projects by name"
             />
             {
-                filterValue && <Button className="ml-0.5" onClick={() => { setFilterValue(''); handleFilter(''); }} variant="ghost">
+                filterValue && <Button className="ml-0.5" onClick={() => { setFilterValue(''); }} variant="ghost">
                     <CircleX />
                 </Button>
             }

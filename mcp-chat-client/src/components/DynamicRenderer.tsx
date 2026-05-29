@@ -237,7 +237,7 @@ function StatComponent({ props }: { props: Record<string, unknown> }) {
       <p className="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
         {safeStr(props.value)}
       </p>
-      {props.sub && (
+      {props.sub !== undefined && props.sub !== null && (
         <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{safeStr(props.sub)}</p>
       )}
     </div>
@@ -253,12 +253,12 @@ function ListItemComponent({ props }: { props: Record<string, unknown> }) {
           <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
             {safeStr(props.title ?? props.name)}
           </p>
-          {props.subtitle && (
+          {props.subtitle !== undefined && props.subtitle !== null && (
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{safeStr(props.subtitle)}</p>
           )}
         </div>
       </div>
-      {props.badge && (
+      {props.badge !== undefined && props.badge !== null && (
         <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full shrink-0 ml-2">
           {safeStr(props.badge)}
         </span>
@@ -312,12 +312,12 @@ function SuccessBanner({ props }: { props: Record<string, unknown> }) {
           <p className="font-medium text-green-800 dark:text-green-200">
             {safeStr(props.message) || 'Done!'}
           </p>
-          {props.detail && (
+          {props.detail !== undefined && props.detail !== null && (
             <p className="mt-1 text-sm text-green-700 dark:text-green-300">
               {safeStr(props.detail)}
             </p>
           )}
-          {props.id && (
+          {props.id !== undefined && props.id !== null && (
             <p className="mt-1 text-xs font-mono text-green-600 dark:text-green-400">
               ID: {safeStr(props.id)}
             </p>
@@ -337,7 +337,7 @@ function ErrorBanner({ props }: { props: Record<string, unknown> }) {
           <p className="font-medium text-red-800 dark:text-red-200">
             {safeStr(props.message) || 'An error occurred'}
           </p>
-          {props.detail && (
+          {props.detail !== undefined && props.detail !== null && (
             <p className="mt-1 text-sm text-red-700 dark:text-red-300">{safeStr(props.detail)}</p>
           )}
         </div>
@@ -458,7 +458,7 @@ function ActionButton({
 // Layout dispatcher
 // ============================================================================
 
-function renderLayout(schema: UISchema, onAction?: Props['onAction']): React.ReactNode {
+function renderLayout(schema: UISchema): React.ReactNode {
   const { layout, components } = schema;
   // components array is already normalised to [] by the caller
   const rendered = (components ?? []).map(renderComponent);
@@ -545,7 +545,7 @@ export default function DynamicRenderer({ schema, onAction }: Props) {
       )}
 
       {/* Components */}
-      {renderLayout(safeSchema, onAction)}
+      {renderLayout(safeSchema)}
 
       {/* Action buttons */}
       {safeSchema.actions.length > 0 && (

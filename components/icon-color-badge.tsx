@@ -1,9 +1,7 @@
-import React from 'react'
 import { Badge } from './ui/badge'
 import { IStatus } from '@/models/Status'
 import DynamicIcon from './dynamic-icon'
 import { IPriority } from '@/models/Priority'
-import { cn } from '@/lib/utils'
 
 interface IconBadgeProps {
     entity: IStatus | IPriority | null | undefined;

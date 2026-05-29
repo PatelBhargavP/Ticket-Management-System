@@ -2,9 +2,8 @@
 
 import dbConnect from "@/lib/db";
 import { castStatusDocumentToDetails } from "@/lib/utils";
-import { AppUser, Status } from "@/models";
+import { Status } from "@/models";
 import { IStatusDocument } from "@/models/Status";
-import { IAppUserDocument } from "@/models/User";
 
 export async function getStatuses() {
   try {

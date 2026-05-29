@@ -174,7 +174,7 @@ export default function MessageBubble({ message, onAction, isLoading }: MessageB
 
   const body = renderAssistantBody();
   const hasLogs = !isUser && (message.agentLogs?.length ?? 0) > 0;
-  const hasLegacyResult = !isUser && !message.uiSchema && message.toolResult;
+  const hasLegacyResult = !isUser && !message.uiSchema && message.toolResult !== undefined;
 
   // Skip rendering an empty assistant bubble altogether (edge case: stream error, nothing came through)
   if (!isUser && !isLoading && body === null && !hasLogs && !hasLegacyResult) {

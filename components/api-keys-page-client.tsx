@@ -24,7 +24,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Key, Plus, Trash2, Copy, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export interface ApiKeyListItem {
   keyId: string;
@@ -215,7 +214,7 @@ export default function ApiKeysPageClient() {
           <Alert>
             <Key className="h-4 w-4" />
             <AlertDescription>
-              You don't have any API keys yet. Create one to get started.
+              You don&apos;t have any API keys yet. Create one to get started.
             </AlertDescription>
           </Alert>
         ) : (
@@ -360,13 +359,13 @@ export default function ApiKeysPageClient() {
           <DialogHeader>
             <DialogTitle>API Key Created</DialogTitle>
             <DialogDescription>
-              Copy this key now. You won't be able to see it again!
+              Copy this key now. You won&apos;t be able to see it again!
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <Alert>
               <AlertDescription>
-                <strong>Important:</strong> This is the only time you'll see this key. Make sure to copy it now.
+                <strong>Important:</strong> This is the only time you&apos;ll see this key. Make sure to copy it now.
               </AlertDescription>
             </Alert>
             <div className="space-y-2">

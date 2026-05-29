@@ -13,7 +13,7 @@ interface TransactionDetailsComponentProps {
 
 export default function TransactionDetailsComponent({ transaction }: TransactionDetailsComponentProps) {
 
-    let updateTempalete: ReactNode[] = [
+    const updateTempalete: ReactNode[] = [
         <p key={transaction.transactionId + '_header'} className="grid grid-cols-5 gap-1 items-center pt-2 border-t">
 
             <UserAvatar className="col-span-2 justify-start" avatarClass="size-5" textClass="" user={transaction.user} />

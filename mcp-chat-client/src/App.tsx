@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AgentClient } from './lib/agent-client';
 import AuthForm from './components/AuthForm';
 import ChatInterface from './components/ChatInterface';
@@ -23,12 +23,9 @@ const agentClient = new AgentClient(AGENT_SERVER_URL);
 // ---------------------------------------------------------------------------
 
 function App() {
-  const [apiKey, setApiKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    const stored = localStorage.getItem('mcp_api_key');
-    if (stored) setApiKey(stored);
-  }, []);
+  const [apiKey, setApiKey] = useState<string | null>(() =>
+    localStorage.getItem('mcp_api_key')
+  );
 
   const handleAuth = (key: string) => {
     localStorage.setItem('mcp_api_key', key);

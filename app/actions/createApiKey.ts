@@ -3,7 +3,7 @@
 import { authOptions } from "@/auth";
 import { getServerSession } from "next-auth";
 import dbConnect from "@/lib/db";
-import { ApiKey, IApiKeyDocument, IApiKeyModel } from "@/models/ApiKey";
+import { ApiKey, IApiKeyModel } from "@/models/ApiKey";
 
 export interface CreateApiKeyResult {
   apiKey: string; // Only returned once - plain text key

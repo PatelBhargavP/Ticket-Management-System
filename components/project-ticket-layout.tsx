@@ -1,22 +1,20 @@
 "use client";
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
-import { Suspense, use, useState } from "react";
+import { Suspense, useState } from "react";
 import { ITicketDetails } from "@/models/Ticket";
 import TicketForm from "./ticket-form";
 import { useProjectTicket } from "@/app/context/ProjectTicketContext";
 import { useSharedApp } from "@/app/context/SharedAppContext";
 import Link from "next/link";
-import { prefetchStatusAndPriority } from "@/lib/prefetch-data";
-import { GroupedData, PaginatedData } from "@/models";
+import { usePrefetchStatusAndPriority } from "@/lib/prefetch-data";
+import { PaginatedData } from "@/models";
 import { Button } from "./ui/button";
 import { IAppUser } from "@/models/User";
 import TicketList from "./ticket-list";
 import TableSkeleton from "./table-skeleton";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "./ui/breadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { IStatus } from "@/models/Status";
-import { IPriority } from "@/models/Priority";
 import TicketKanbanBoard from "./ticket-kanban-board";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
 import KanbanSkeleton from "./kanban-skeleton";
@@ -37,10 +35,10 @@ export default function ProjectTicketLayout(
     }
 ) {
     const { ticket, setTicket, project } = useProjectTicket();
-    prefetchStatusAndPriority();
+    usePrefetchStatusAndPriority();
     const { statuses, priorities } = useSharedApp();
     const [openSheet, setOpenSheet] = useState(false);
-    const [isFormDirty, setIsFormDirty] = useState(false);
+    const [, setIsFormDirty] = useState(false);
     const [showPrompt, setShowPrompt] = useState(false);
     const newTicketObj = {
         name: "",

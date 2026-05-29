@@ -2,7 +2,7 @@
 
 import dbConnect from "@/lib/db";
 import { castUserDocumentToDetails } from "@/lib/utils";
-import { AppUser, IAppUser, IAppUserDocument } from "@/models/User";
+import { AppUser, IAppUserDocument } from "@/models/User";
 import { QueryFilter } from "mongoose";
 
 export async function getUserDetails(filter: QueryFilter<IAppUserDocument>) {

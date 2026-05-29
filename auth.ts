@@ -70,7 +70,7 @@ export const authOptions: AuthOptions = {
       }
       return token;
     },
-    async signIn({ user, account, profile }) {
+    async signIn({ user }) {
       // we need to save user here
 
       let userDetails = await getUserDetails({email: user.email });
@@ -85,7 +85,7 @@ export const authOptions: AuthOptions = {
       // console.log('user post signin: ', user, ", and in DB: ", userDetails)
       return !!userDetails;
     },
-    async session({ session, token, user }) {
+    async session({ session, token }) {
       if (token?.userId) {
         session.userId = token.userId;
         session.user.userId = token.userId;
@@ -101,10 +101,6 @@ export const handlers = NextAuth(authOptions);
 declare module "next-auth" {
   interface User extends IAppUser {
     id: string
-    // ... other custom properties ...
-  }
-  interface AdapterUser extends IAppUser {
-    // id: ObjectId
     // ... other custom properties ...
   }
 

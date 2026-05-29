@@ -1,7 +1,7 @@
 import { useSharedApp } from "@/app/context/SharedAppContext";
 import { useEffect } from "react";
 
-export function prefetchStatusAndPriority() {
+export function usePrefetchStatusAndPriority() {
     const { statuses , setStatuses , getStatuses, priorities, setPriorities, getPriorities } = useSharedApp();
     useEffect(() => {
 

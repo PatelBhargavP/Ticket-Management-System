@@ -6,7 +6,6 @@ import { ITicketDetails, ITicketDocument } from "@/models/Ticket";
 import { ITransactionDetails, ITransactionDocument, ITransactionEntityDetails, ITransactionField, ITransactionValues } from "@/models/Transaction";
 import { IAppUser, IAppUserDocument } from "@/models/User";
 import { clsx, type ClassValue } from "clsx"
-import { Query, QueryWithHelpers } from "mongoose";
 import { User } from "next-auth";
 import { twMerge } from "tailwind-merge"
 

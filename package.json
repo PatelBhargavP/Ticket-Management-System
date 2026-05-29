@@ -6,7 +6,9 @@
     "dev": "NODE_OPTIONS='--inspect' next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "prepare": "if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then git config core.hooksPath .githooks; fi",
     "mcp:dev": "tsx mcp-server/index.ts",
     "mcp:build": "tsc mcp-server/index.ts --outDir mcp-server/dist --module esnext --target es2020 --moduleResolution node --esModuleInterop --resolveJsonModule",
     "mcp:start": "node mcp-server/dist/index.js"

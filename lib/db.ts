@@ -7,7 +7,7 @@ declare global {
 
 type MongooseType = typeof mongoose;
 
-let cached: { conn?: MongooseType | null; promise?: Promise<MongooseType> | null } =
+const cached: { conn?: MongooseType | null; promise?: Promise<MongooseType> | null } =
   global.mongoose || { conn: null, promise: null };
 
 async function dbConnect(): Promise<MongooseType> {

@@ -3,17 +3,16 @@ import { Separator } from "@/components/ui/separator"
 import { headers } from 'next/headers';
 import { ProfileDropdown } from './profile-dropdown';
 import { authOptions } from '@/auth';
-import { AvatarImage } from './ui/avatar';
 import AppName from './app-name';
 
 export async function Navbar() {
     const session = await getServerSession(authOptions);
     const headerList = await headers();
     const pathname = headerList.get("x-current-path");
-    const isLoginPage = pathname?.includes("/login")
+    pathname?.includes("/login")
     let buttons = <></>;
     if (session) {
-        buttons = <><ProfileDropdown name={session.user.name || undefined} email={session.user.email} avatarUrl={session.user.image}></ProfileDropdown></>
+        buttons = <><ProfileDropdown name={session.user.name || undefined} avatarUrl={session.user.image}></ProfileDropdown></>
     } else {
         return <></>
     }

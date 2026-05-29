@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { IProject, IProjectDetails, IProjectDocument } from "@/models/Project";
+import { IProjectDetails, IProjectDocument } from "@/models/Project";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Trash2 } from "lucide-react";
@@ -9,7 +9,6 @@ import { IAppUser } from "@/models/User";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "./ui/input";
 import { useRouter } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import UserAvatar from "./user-avatar";
 
 export default function ProjectEdit({ project, users }: { project: IProjectDetails, users: IAppUser[] }) {

@@ -1,4 +1,4 @@
-import mongoose, { CallbackError, Model, ObjectId, Schema, Types } from "mongoose";
+import mongoose, { Model, ObjectId, Schema, Types } from "mongoose";
 import { AppUser, IAppUser, IAppUserDocument } from "./User";
 import { AppTimeStamp } from "./time-stamp";
 import { generateRandomCharString } from "@/lib/utils";

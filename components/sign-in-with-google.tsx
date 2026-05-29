@@ -1,7 +1,6 @@
 'use client';
 import { signIn } from 'next-auth/react';
 import { Button } from './ui/button';
-import { Globe } from 'lucide-react';
 import { Avatar } from '@radix-ui/react-avatar';
 import { AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 

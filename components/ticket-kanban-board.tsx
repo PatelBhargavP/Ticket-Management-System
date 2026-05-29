@@ -1,13 +1,12 @@
 "use client";
 
-import { GroupedData, GroupingType } from "@/models";
+import { GroupingType } from "@/models";
 import { ITicketDetails, ITicketDocument } from "@/models/Ticket";
 import { IStatus } from "@/models/Status";
 import { IPriority } from "@/models/Priority";
-import { use, useEffect, useRef, useState } from "react";
+import { use, useEffect, useState } from "react";
 import KanbanBoardColumn, { BoardContainer } from "./kanban-board-column";
 import {
-    Announcements,
     DndContext,
     DragEndEvent,
     DragOverEvent,
@@ -16,7 +15,6 @@ import {
     KeyboardSensor,
     MouseSensor,
     TouchSensor,
-    UniqueIdentifier,
     useSensor,
     useSensors
 } from "@dnd-kit/core";
@@ -25,7 +23,6 @@ import { hasDraggableData } from "@/lib/drag.utils";
 import { useSharedApp } from "@/app/context/SharedAppContext";
 import { createPortal } from "react-dom";
 import KanbanBoardCard from "./kanban-board-card";
-import IconColorBadge from "./icon-color-badge";
 import { useProjectTicket } from "@/app/context/ProjectTicketContext";
 import { useRouter } from "next/navigation";
 import { coordinateGetter } from "@/lib/multipleContainersKeyboardPreset";
@@ -47,12 +44,10 @@ export default function TicketKanbanBoard({ getUerProjectTickets, getProjectKanb
     const { project, setTransactions } = useProjectTicket();
     const { statuses, priorities } = useSharedApp();
 
-    const pickedUpTicketColumn = useRef<string | null>(null);
     const [activeColumnId, setActiveColumnID] = useState<string | null>(null);
     const [activeTicket, setActiveTicket] = useState<ITicketDetails | null>(null);
-    const [mounted, setMounted] = useState<boolean>(false);
     const [tickets, setTickets] = useState<ITicketDetails[]>(structuredClone(userProjectTicketsList));
-    useEffect(() => setMounted(true), [])
+    const [columns, setColumns] = useState<IBoardColum<IStatus | IPriority>[]>([]);
 
 
     const sensors = useSensors(
@@ -63,17 +58,7 @@ export default function TicketKanbanBoard({ getUerProjectTickets, getProjectKanb
         })
     );
 
-    if (!tickets.length) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className='flex flex-col justify-around'>
-                    No tickets created yet!
-                </div>
-            </div>
-        )
-    }
     const groupType: GroupingType = 'status';
-    const [columns, setColumns] = useState<IBoardColum<IStatus | IPriority>[]>([]);
     function initializeColumns() {
         let cols: IBoardColum<IStatus | IPriority>[] = [];
         switch (groupType) {
@@ -83,7 +68,6 @@ export default function TicketKanbanBoard({ getUerProjectTickets, getProjectKanb
         if (columnOrder.length && cols.length) {
             const tracker: { [kaet: string]: boolean } = {}
             const newOrder: IBoardColum<IStatus | IPriority>[] = [];
-            const addedColumns = []
             columnOrder.forEach(id => {
                 if (tracker[id]) {
                     return;
@@ -105,6 +89,16 @@ export default function TicketKanbanBoard({ getUerProjectTickets, getProjectKanb
         setColumns(cols);
     }
     useEffect(initializeColumns, [statuses, priorities, columnOrder]);
+
+    if (!tickets.length) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className='flex flex-col justify-around'>
+                    No tickets created yet!
+                </div>
+            </div>
+        )
+    }
 
     function ticketFilter(columnId: string, ticket: ITicketDetails, groupType: GroupingType) {
         const currentId = groupType === 'status' ? ticket.status.statusId : groupType === 'priority' ? ticket.priority.priorityId : ticket.ticketId;
@@ -244,7 +238,7 @@ export default function TicketKanbanBoard({ getUerProjectTickets, getProjectKanb
             </div>
 
 
-            {mounted && "document" in window &&
+            {typeof document !== "undefined" &&
                 createPortal(
                     <DragOverlay>
                         {activeColElm()}

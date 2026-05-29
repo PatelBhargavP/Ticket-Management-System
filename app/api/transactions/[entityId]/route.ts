@@ -1,7 +1,6 @@
 // app/api/transactions/[ticketId]/route.ts
 import { getTransactions } from '@/app/actions/getTransactions';
 import tokenParser from '@/lib/token-parser';
-import { ITransactionDetails } from '@/models/Transaction';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ entityId: string }> }) {

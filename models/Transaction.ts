@@ -3,8 +3,6 @@ import { AppUser, IAppUser } from "./User";
 import { AppTimeStamp } from "./time-stamp";
 import { IStatus } from "./Status";
 import { IPriority } from "./Priority";
-import { Project } from "./Project";
-import { Ticket } from "./Ticket";
 
 
 
@@ -15,9 +13,6 @@ export type ITransactionValues = {
     statusId: IStatus;
     priorityId: IPriority;
 }
-
-const projectBaseName = Project.baseModelName;
-const ticketBaseName = Ticket.baseModelName;
 
 export type ITransactionValueTypes = keyof ITransactionValues;
 export type ITransactionTypes = 'create' | 'update';

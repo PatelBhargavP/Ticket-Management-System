@@ -8,11 +8,6 @@ import { getServerSession } from "next-auth";
 import { Suspense } from "react";
 
 export default async function TicketBoardPage({params}: {params: Promise<{ identifier: string }>}) {
-  const FallbackTemplate = (
-    <>
-      <p className="text-center"> Loading projects tickets...! </p>
-    </>
-  )
   const projectIdentifier = (await params).identifier;
   const projectDetails = await projectByIdentifierCache(projectIdentifier)();
   const projectTicketist = getUserProjectTickets(projectDetails.projectId);

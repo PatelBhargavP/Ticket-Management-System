@@ -7,7 +7,7 @@ import { UserAvatarGroup } from './user-avatar-group';
 import IconColorBadge from './icon-color-badge';
 import { GroupingType } from '@/models';
 import { CSS } from "@dnd-kit/utilities";
-import { SortableContext, useSortable } from '@dnd-kit/sortable'
+import { useSortable } from '@dnd-kit/sortable'
 import { cva } from 'class-variance-authority'
 import { Button } from './ui/button'
 import { GripVertical } from 'lucide-react'

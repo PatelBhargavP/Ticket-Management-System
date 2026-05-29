@@ -1,0 +1,111 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel)
+git_common_dir=$(git rev-parse --git-common-dir)
+cd "$repo_root"
+
+case "$git_common_dir" in
+  /*) default_hook="$git_common_dir/hooks/pre-commit" ;;
+  *) default_hook="$repo_root/$git_common_dir/hooks/pre-commit" ;;
+esac
+
+if [ -x "$default_hook" ] && [ "$default_hook" != "$0" ]; then
+  "$default_hook" "$@"
+fi
+
+staged_files=$(git diff --cached --name-only --diff-filter=ACMR)
+
+filter_files() {
+  pattern=$1
+  printf '%s\n' "$staged_files" | grep -E "$pattern" || true
+}
+
+make_staged_tsconfig() {
+  out_file=$1
+  extends_file=$2
+  typecheck_files=$3
+
+  REPO_ROOT="$repo_root" EXTENDS_FILE="$extends_file" TYPECHECK_FILES="$typecheck_files" OUT_FILE="$out_file" node <<'NODE'
+const fs = require('fs');
+const path = require('path');
+
+const files = (process.env.TYPECHECK_FILES || '')
+  .split('\n')
+  .filter(Boolean)
+  .map((file) => path.resolve(process.env.REPO_ROOT, file));
+
+fs.writeFileSync(
+  process.env.OUT_FILE,
+  `${JSON.stringify(
+    {
+      extends: process.env.EXTENDS_FILE,
+      compilerOptions: {
+        incremental: false,
+      },
+      files,
+    },
+    null,
+    2,
+  )}\n`,
+);
+NODE
+}
+
+run_typecheck() {
+  label=$1
+  tsc_bin=$2
+  extends_file=$3
+  temp_dir=$4
+  files=$5
+
+  if [ -z "$files" ]; then
+    return
+  fi
+
+  echo "Typechecking staged $label files..."
+  tmp_config=$(mktemp "$temp_dir/.staged-tsconfig.XXXXXX.json")
+  trap 'rm -f "$tmp_config"' EXIT
+  make_staged_tsconfig "$tmp_config" "$extends_file" "$files"
+  "$tsc_bin" --noEmit -p "$tmp_config"
+  rm -f "$tmp_config"
+  trap - EXIT
+}
+
+root_lint_files=$(filter_files '^[^ ].*\.(js|jsx|ts|tsx|mjs|cjs|mts|cts)$' | grep -v '^mcp-chat-client/' || true)
+root_typecheck_files=$(filter_files '^[^ ].*\.(ts|tsx|mts|cts)$' | grep -v '^mcp-chat-client/' || true)
+
+client_lint_files=$(filter_files '^mcp-chat-client/.*\.(js|jsx|ts|tsx|mjs|cjs|mts|cts)$' | sed 's#^mcp-chat-client/##' || true)
+client_app_typecheck_files=$(filter_files '^mcp-chat-client/src/.*\.(ts|tsx)$' || true)
+client_node_typecheck_files=$(filter_files '^mcp-chat-client/.*\.(ts|mts|cts)$' | grep -v '^mcp-chat-client/src/' || true)
+
+if [ -n "$root_lint_files" ]; then
+  echo "Linting staged root files..."
+  ./node_modules/.bin/eslint --quiet --no-warn-ignored $root_lint_files
+fi
+
+run_typecheck "root TypeScript" \
+  "$repo_root/node_modules/.bin/tsc" \
+  "$repo_root/tsconfig.json" \
+  "$repo_root" \
+  "$root_typecheck_files"
+
+if [ -n "$client_lint_files" ]; then
+  echo "Linting staged mcp-chat-client files..."
+  (
+    cd "$repo_root/mcp-chat-client"
+    ./node_modules/.bin/eslint --quiet --no-warn-ignored $client_lint_files
+  )
+fi
+
+run_typecheck "mcp-chat-client app TypeScript" \
+  "$repo_root/mcp-chat-client/node_modules/.bin/tsc" \
+  "$repo_root/mcp-chat-client/tsconfig.app.json" \
+  "$repo_root/mcp-chat-client" \
+  "$client_app_typecheck_files"
+
+run_typecheck "mcp-chat-client Node TypeScript" \
+  "$repo_root/mcp-chat-client/node_modules/.bin/tsc" \
+  "$repo_root/mcp-chat-client/tsconfig.node.json" \
+  "$repo_root/mcp-chat-client" \
+  "$client_node_typecheck_files"

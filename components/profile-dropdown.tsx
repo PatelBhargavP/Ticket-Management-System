@@ -22,13 +22,11 @@ import { signOut } from 'next-auth/react'
 
 interface ProfileDropdownProps {
     name?: string
-    email: string
     avatarUrl?: string
 }
 
 export function ProfileDropdown({
     name,
-    email,
     avatarUrl
 }: ProfileDropdownProps) {
     const router = useRouter();

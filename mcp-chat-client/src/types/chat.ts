@@ -22,7 +22,8 @@ export type UIComponentType =
   | 'kanban-column'
   | 'success-banner'
   | 'error-banner'
-  | 'json-viewer';
+  | 'json-viewer'
+  | 'text';
 
 export interface UIComponent {
   type: UIComponentType;
@@ -83,7 +84,6 @@ export interface ChatMessage {
   /** Agent execution trace */
   agentLogs?: AgentLog[];
   /** Legacy MCP direct-call result (kept for backward compat) */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   toolResult?: unknown;
   error?: string;
 }

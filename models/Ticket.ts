@@ -1,10 +1,9 @@
-import mongoose, { CallbackError, Model, ObjectId, Schema, Types } from "mongoose";
+import mongoose, { Model, ObjectId, Schema, Types } from "mongoose";
 import { AppUser, IAppUser, IAppUserDocument } from "./User";
 import { AppTimeStamp } from "./time-stamp";
 import { Project, IProjectBase, IProjectDocument } from "./Project";
 import { IStatus, Status } from "./Status";
 import { IPriority, Priority } from "./Priority";
-import { statuses } from "@/lib/status.data";
 
 export interface ITicketBase {
     ticketId: string;

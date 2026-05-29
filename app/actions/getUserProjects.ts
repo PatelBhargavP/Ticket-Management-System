@@ -1,11 +1,10 @@
 "use server";
 
 import { Project } from "@/models";
-import { IProjectDetails, IProjectDocument } from "@/models/Project";
+import { IProjectDocument } from "@/models/Project";
 import { QueryFilter } from "mongoose";
 import dbConnect from "@/lib/db";
 import { appUserAttributes, castProjectDocumentToDetails } from "@/lib/utils";
-import { IAppUser } from "@/models/User";
 
 export async function getUserProjects(userId: string) {
     try {

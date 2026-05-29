@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 export default function AddProjectButton() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handleAddProject = (name: string) => {
+  const handleAddProject = () => {
     // Project added successfully
   };
 

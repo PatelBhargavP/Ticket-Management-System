@@ -53,10 +53,10 @@ export default function TicketForm({ onDirtyChange, onSubmitSuccess }: Props) {
             name: ticket?.name,
             ticketId: ticket?.ticketId,
             description: ticket?.description,
-            projectId: ticket?.project.projectId,
-            assigneeIds: ticket?.assignee.map(user => user.userId),
-            statusId: ticket?.status.statusId,
-            priorityId: ticket?.priority.priorityId,
+            projectId: ticket?.project?.projectId,
+            assigneeIds: ticket?.assignee?.map(user => user.userId),
+            statusId: ticket?.status?.statusId,
+            priorityId: ticket?.priority?.priorityId,
         },
     });
 

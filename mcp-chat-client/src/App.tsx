@@ -1,48 +1,56 @@
 import { useState, useEffect } from 'react';
-import { MCPClient } from './lib/mcp-client';
+import { AgentClient } from './lib/agent-client';
 import AuthForm from './components/AuthForm';
 import ChatInterface from './components/ChatInterface';
 
-const MCP_SERVER_URL = import.meta.env.VITE_MCP_SERVER_URL || 'http://localhost:3000/api/mcp';
+// ---------------------------------------------------------------------------
+// Environment config
+// ---------------------------------------------------------------------------
+
+// Python LangGraph agent server
+const AGENT_SERVER_URL =
+  import.meta.env.VITE_AGENT_SERVER_URL || 'http://localhost:8000';
+
+// Ticket Management System MCP server (forwarded to the Python server)
+const MCP_SERVER_URL =
+  import.meta.env.VITE_MCP_SERVER_URL || 'http://localhost:8001/mcp';
+
+// Singleton client — recreated only when serverUrl changes
+const agentClient = new AgentClient(AGENT_SERVER_URL);
+
+// ---------------------------------------------------------------------------
+// App
+// ---------------------------------------------------------------------------
 
 function App() {
   const [apiKey, setApiKey] = useState<string | null>(null);
-  const [mcpClient, setMcpClient] = useState<MCPClient | null>(null);
 
   useEffect(() => {
-    // Load API key from localStorage
-    const storedKey = localStorage.getItem('mcp_api_key');
-    if (storedKey) {
-      setApiKey(storedKey);
-      setMcpClient(new MCPClient({
-        serverUrl: MCP_SERVER_URL,
-        apiKey: storedKey,
-      }));
-    }
+    const stored = localStorage.getItem('mcp_api_key');
+    if (stored) setApiKey(stored);
   }, []);
 
   const handleAuth = (key: string) => {
     localStorage.setItem('mcp_api_key', key);
     setApiKey(key);
-    setMcpClient(new MCPClient({
-      serverUrl: MCP_SERVER_URL,
-      apiKey: key,
-    }));
   };
 
   const handleLogout = () => {
     localStorage.removeItem('mcp_api_key');
     setApiKey(null);
-    setMcpClient(null);
   };
 
-  if (!apiKey || !mcpClient) {
+  if (!apiKey) {
     return <AuthForm onAuth={handleAuth} serverUrl={MCP_SERVER_URL} />;
   }
 
   return (
     <div className="h-screen flex flex-col">
-      <ChatInterface mcpClient={mcpClient} />
+      <ChatInterface
+        agentClient={agentClient}
+        apiKey={apiKey}
+        mcpUrl={MCP_SERVER_URL}
+      />
       <button
         onClick={handleLogout}
         className="fixed top-4 right-4 px-4 py-2 bg-gray-600 text-white cursor-pointer rounded-lg hover:bg-gray-700 text-sm z-50"

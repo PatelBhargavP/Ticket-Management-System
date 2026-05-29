@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "mcp:dev": "ts-node mcp-server/index.ts",
+    "mcp:dev": "tsx mcp-server/index.ts",
     "mcp:build": "tsc mcp-server/index.ts --outDir mcp-server/dist --module esnext --target es2020 --moduleResolution node --esModuleInterop --resolveJsonModule",
     "mcp:start": "node mcp-server/dist/index.js"
   },
